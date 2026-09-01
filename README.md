@@ -30,7 +30,7 @@ Generator Node.js juga tetap tersedia untuk membuat versi Glass dari terminal:
 
 ```powershell
 npm install
-npm run recap -- --name "kh1zz"
+npm run recap -- --name "(nama)"
 ```
 
 Hasil terminal dibuat di `output/youtube_music_recap.jpg`.

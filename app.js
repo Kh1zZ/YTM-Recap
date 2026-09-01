@@ -10,6 +10,25 @@ const result = document.querySelector('#result');
 const preview = document.querySelector('#preview');
 const downloadLink = document.querySelector('#download-link');
 let currentUrl;
+let backgroundImage;
+let language = 'id';
+
+const copy = {
+  id: { headline: 'Recap musikmu,<br /><em>untuk kebutuhan story.</em>', intro: 'Upload histori Google Takeout, kustomisasi recap-mu sesuka hati. Tidak ada akun, server, maupun database.', privacy: 'File diproses sepenuhnya di perangkatmu.', includeYoutube: 'Ikut hitung histori YouTube biasa <small>(bisa mencakup video non-musik)</small>', formTitle: 'Buat gambar recap', uploadFile: 'Upload file JSON atau ZIP', takeoutFile: 'File dari Google Takeout', tutorialSummary: 'Cara mengambil histori dari <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>', tutorialContent: '<p><strong>1.</strong> Buka <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>, lalu klik <strong>Batalkan semua pilihan</strong>.</p><p><strong>2.</strong> Pilih <strong>YouTube dan YouTube Music</strong>, lalu lanjutkan ke langkah berikutnya.</p><p><strong>3.</strong> Buat ekspor. Setelah email dari Google datang, download file ZIP-nya.</p><p><strong>4.</strong> Upload ZIP tersebut langsung di atas—nggak perlu extract manual. Aplikasi akan mencari file histori tontonan otomatis.</p>', nameLabel: 'Nama atau nickname <span>(opsional)</span>', namePlaceholder: 'masukkan nama', periodLabel: 'Rentang recap', period1: '1 bulan terakhir', period6: '6 bulan terakhir', period12: '1 tahun terakhir', styleLabel: 'Pilih style gambar', glassDesc: 'Modern, gelap, dan berkilau', receiptDesc: 'Minimal seperti struk belanja', accentLabel: 'Warna dominan', backgroundLabel: 'Latar belakang', gradient: 'Gradasi warna', custom: 'Gambar sendiri', backgroundUpload: 'Upload gambar background', backgroundPreview: 'Preview background', blur: 'Blur', darkness: 'Kegelapan', size: 'Ukuran', positionX: 'Posisi horizontal', positionY: 'Posisi vertikal', defaultColor: 'Default', red: 'Merah', blue: 'Biru', purple: 'Ungu', green: 'Hijau', yellow: 'Kuning', pink: 'Pink', brown: 'Coklat', gray: 'Abu-hitam', generate: 'Buat recap', resultTitle: 'Ini recap-mu.', download: 'Download JPG', footer: 'Dibuat oleh kegabutan/bored ·', defaultName: 'Kamu', plays: 'kali diputar', topTracks: 'Top 10 lagu', play: 'PUTAR', topArtists: 'TOP 3 ARTISTS', item: 'ITEM', totalPlay: 'TOTAL PUTAR:', itemCount: 'JUMLAH ITEM:', thankYou: 'TERIMA KASIH SUDAH MENDENGARKAN!', noHistory: 'Tidak ada pemutaran YouTube Music dalam rentang waktu ini pada file tersebut.', analyzed: 'pemutaran dianalisis dalam', generating: 'Membuat recap…' },
+  en: { headline: 'Your music recap,<br /><em>made for your story.</em>', intro: 'Upload your Google Takeout history and customize your recap your way. No accounts, servers, or databases.', privacy: 'Your file is processed entirely on your device.', includeYoutube: 'Also include regular YouTube history <small>(may include non-music videos)</small>', formTitle: 'Create recap image', uploadFile: 'Upload JSON or ZIP file', takeoutFile: 'File from Google Takeout', tutorialSummary: 'How to get your history from <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>', tutorialContent: '<p><strong>1.</strong> Open <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>, then click <strong>Deselect all</strong>.</p><p><strong>2.</strong> Select <strong>YouTube and YouTube Music</strong>, then continue to the next step.</p><p><strong>3.</strong> Create an export. When Google sends the email, download the ZIP file.</p><p><strong>4.</strong> Upload the ZIP directly above—there is no need to extract it. The app will find your watch-history file automatically.</p>', nameLabel: 'Name or nickname <span>(optional)</span>', namePlaceholder: 'enter name', periodLabel: 'Recap period', period1: 'Last 1 month', period6: 'Last 6 months', period12: 'Last 1 year', styleLabel: 'Choose recap style', glassDesc: 'Modern, dark, and luminous', receiptDesc: 'Minimal like a shopping receipt', accentLabel: 'Dominant color', backgroundLabel: 'Background', gradient: 'Color gradient', custom: 'Your own image', backgroundUpload: 'Upload background image', backgroundPreview: 'Background preview', blur: 'Blur', darkness: 'Darkness', size: 'Size', positionX: 'Horizontal position', positionY: 'Vertical position', defaultColor: 'Default', red: 'Red', blue: 'Blue', purple: 'Purple', green: 'Green', yellow: 'Yellow', pink: 'Pink', brown: 'Brown', gray: 'Gray-black', generate: 'Create recap', resultTitle: 'Your recap is ready.', download: 'Download JPG', footer: 'Made by kegabutan/bored ·', defaultName: 'You', plays: 'plays', topTracks: 'Top 10 tracks', play: 'PLAYS', topArtists: 'TOP 3 ARTISTS', item: 'ITEM', totalPlay: 'TOTAL PLAY:', itemCount: 'ITEM COUNT:', thankYou: 'THANK YOU FOR LISTENING!', noHistory: 'No YouTube Music plays were found in this time period.', analyzed: 'plays analyzed in the last', generating: 'Creating recap…' }
+};
+const accents = {
+  default: ['#11101f', '#28163b', '#ff315b'], red: ['#11101f', '#3d1625', '#ff3b61'], blue: ['#11101f', '#172a53', '#50a4ff'], purple: ['#11101f', '#321b50', '#ae7aff'], green: ['#11101f', '#163c3b', '#53dfad'], yellow: ['#11101f', '#44351a', '#ffd65c'], pink: ['#11101f', '#44203d', '#ff85bb'], brown: ['#11101f', '#3b2923', '#d28a62'], gray: ['#11101f', '#2d303a', '#aeb3c1']
+};
+const t = (key) => copy[language][key] || key;
+
+function applyLanguage() {
+  document.documentElement.lang = language;
+  document.querySelector('#language-toggle').textContent = language === 'id' ? 'EN' : 'ID';
+  document.querySelectorAll('[data-i18n]').forEach((element) => { element.innerHTML = t(element.dataset.i18n); });
+  document.querySelector('#username').placeholder = t('namePlaceholder');
+  if (!fileInput.files[0]) fileLabel.textContent = t('uploadFile');
+}
 
 function musicTrack(item, includeYoutube) {
   if (!item || typeof item.title !== 'string' || typeof item.titleUrl !== 'string') return null;
@@ -29,9 +48,9 @@ function topEntries(map, limit) {
   return [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, limit);
 }
 
-function buildStats(data, includeYoutube) {
+function buildStats(data, includeYoutube, periodMonths) {
   if (!Array.isArray(data)) throw new Error('Isi JSON harus berupa daftar histori dari Google Takeout.');
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const since = new Date(); since.setMonth(since.getMonth() - periodMonths);
   const tracks = new Map();
   const artists = new Map();
   let matched = 0;
@@ -95,19 +114,55 @@ function jakartaDate(value) {
   return `${parts.find((p) => p.type === 'year').value}-${parts.find((p) => p.type === 'month').value}-${parts.find((p) => p.type === 'day').value}`;
 }
 
-function drawGlassRecap({ tracks, artists, since }, username) {
+function drawBackground(ctx) {
+  const [deep, mid, accent] = accents[document.querySelector('#accent-color').value];
+  ctx.fillStyle = deep; ctx.fillRect(0, 0, 1080, 1920);
+  if (document.querySelector('#background-type').value === 'custom' && backgroundImage) {
+    const scale = Number(document.querySelector('#background-size').value) / 100;
+    const cover = Math.max(1080 / backgroundImage.width, 1920 / backgroundImage.height) * scale;
+    const width = backgroundImage.width * cover; const height = backgroundImage.height * cover;
+    const x = (1080 - width) * (Number(document.querySelector('#background-x').value) / 100);
+    const y = (1920 - height) * (Number(document.querySelector('#background-y').value) / 100);
+    ctx.save(); ctx.filter = `blur(${document.querySelector('#background-blur').value}px)`; ctx.drawImage(backgroundImage, x, y, width, height); ctx.restore();
+    ctx.fillStyle = `rgba(5, 8, 18, ${Number(document.querySelector('#background-darkness').value) / 100})`; ctx.fillRect(0, 0, 1080, 1920);
+  } else {
+    const background = ctx.createLinearGradient(0, 0, 0, 1920); background.addColorStop(0, deep); background.addColorStop(1, mid); ctx.fillStyle = background; ctx.fillRect(0, 0, 1080, 1920);
+  }
+  const glow = ctx.createRadialGradient(720, 340, 0, 720, 340, 1240); glow.addColorStop(0, `${accent}8f`); glow.addColorStop(.55, `${accent}35`); glow.addColorStop(1, `${mid}00`); ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, 1920);
+  return accent;
+}
+
+function updateBackgroundPreview() {
+  const canvas = document.querySelector('#background-preview');
+  const ctx = canvas.getContext('2d'); const width = canvas.width; const height = canvas.height;
+  const [deep, mid, accent] = accents[document.querySelector('#accent-color').value];
+  const gradient = ctx.createLinearGradient(0, 0, 0, height); gradient.addColorStop(0, deep); gradient.addColorStop(1, mid); ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, height);
+  if (backgroundImage) {
+    const scale = Number(document.querySelector('#background-size').value) / 100;
+    const cover = Math.max(width / backgroundImage.width, height / backgroundImage.height) * scale;
+    const imageWidth = backgroundImage.width * cover; const imageHeight = backgroundImage.height * cover;
+    const x = (width - imageWidth) * (Number(document.querySelector('#background-x').value) / 100);
+    const y = (height - imageHeight) * (Number(document.querySelector('#background-y').value) / 100);
+    ctx.save(); ctx.filter = `blur(${Number(document.querySelector('#background-blur').value) * (width / 1080)}px)`; ctx.drawImage(backgroundImage, x, y, imageWidth, imageHeight); ctx.restore();
+    ctx.fillStyle = `rgba(5, 8, 18, ${Number(document.querySelector('#background-darkness').value) / 100})`; ctx.fillRect(0, 0, width, height);
+  }
+  const glow = ctx.createRadialGradient(width * .68, height * .18, 0, width * .68, height * .18, width * 1.15); glow.addColorStop(0, `${accent}8f`); glow.addColorStop(.55, `${accent}35`); glow.addColorStop(1, `${mid}00`); ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
+}
+
+function periodText(periodMonths) { return language === 'id' ? `${periodMonths === 12 ? '1 tahun' : `${periodMonths} bulan`} terakhir` : periodMonths === 12 ? 'last 1 year' : `last ${periodMonths} months`; }
+
+function drawGlassRecap({ tracks, artists, since }, username, periodMonths) {
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
   const ctx = canvas.getContext('2d');
-  const background = ctx.createLinearGradient(0, 0, 0, 1920); background.addColorStop(0, '#121123'); background.addColorStop(1, '#282139'); ctx.fillStyle = background; ctx.fillRect(0, 0, 1080, 1920);
-  const glow = ctx.createRadialGradient(850, 260, 0, 850, 260, 700); glow.addColorStop(0, 'rgba(118,54,92,.72)'); glow.addColorStop(1, 'rgba(48,29,66,0)'); ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, 1920);
+  const accent = drawBackground(ctx);
   roundedRect(ctx, 56, 78, 59, 40, 12, '#ff0033'); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(80, 87); ctx.lineTo(80, 109); ctx.lineTo(100, 98); ctx.fill();
   label(ctx, 'YOUTUBE MUSIC', 135, 110, { size: 28, weight: 700, color: '#ff536f' });
   label(ctx, username, 1024, 112, { size: 40, weight: 700, align: 'right', maxWidth: 500 });
   label(ctx, 'YouTube Music', 56, 215, { size: 53, weight: 700 });
   const now = new Date(); label(ctx, 'Recap', 56, 300, { size: 62, weight: 700 });
-  label(ctx, `${jakartaDate(since)} — ${jakartaDate(now)}  ·  30 hari terakhir`, 58, 350, { size: 22, color: '#e6e5f0' });
-  for (let rank = 0; rank < 3; rank += 1) { const y = 385 + rank * 122; roundedRect(ctx, 56, y, 968, 105, 28, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); const entry = artists[rank]; if (!entry) continue; const [artist, plays] = entry; ctx.fillStyle = '#ff234f'; ctx.beginPath(); ctx.arc(108, y + 53, 28, 0, Math.PI * 2); ctx.fill(); label(ctx, String(rank + 1), 108, y + 63, { size: 28, weight: 700, align: 'center' }); label(ctx, artist, 165, y + 53, { size: 28, weight: 700, maxWidth: 640 }); label(ctx, `${plays} kali diputar`, 165, y + 87, { size: 22, color: '#e6e5f0' }); }
-  label(ctx, 'Top 10 lagu', 56, 815, { size: 53, weight: 700 }); label(ctx, 'PUTAR', 1024, 815, { size: 22, color: '#e6e5f0', align: 'right' });
+  label(ctx, `${jakartaDate(since)} — ${jakartaDate(now)}  ·  ${periodText(periodMonths)}`, 58, 350, { size: 22, color: '#e6e5f0' });
+  for (let rank = 0; rank < 3; rank += 1) { const y = 385 + rank * 122; roundedRect(ctx, 56, y, 968, 105, 28, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); const entry = artists[rank]; if (!entry) continue; const [artist, plays] = entry; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(108, y + 53, 28, 0, Math.PI * 2); ctx.fill(); label(ctx, String(rank + 1), 108, y + 63, { size: 28, weight: 700, align: 'center' }); label(ctx, artist, 165, y + 53, { size: 28, weight: 700, maxWidth: 640 }); label(ctx, `${plays} ${t('plays')}`, 165, y + 87, { size: 22, color: '#e6e5f0' }); }
+  label(ctx, t('topTracks'), 56, 815, { size: 53, weight: 700 }); label(ctx, t('play'), 1024, 815, { size: 22, color: '#e6e5f0', align: 'right' });
   tracks.forEach(([[track, artist], plays], index) => { const y = 840 + index * 91; roundedRect(ctx, 56, y, 968, 81, 22, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); label(ctx, String(index + 1).padStart(2, '0'), 80, y + 51, { size: 22, color: '#e6e5f0' }); label(ctx, track, 156, y + 43, { size: 28, weight: 700, maxWidth: 620 }); label(ctx, artist, 156, y + 70, { size: 22, color: '#e6e5f0', maxWidth: 620 }); label(ctx, `${plays}×`, 995, y + 52, { size: 28, weight: 700, align: 'right' }); });
   return canvas;
 }
@@ -131,7 +186,7 @@ function receiptBarcode(ctx, x, y, width, height) {
   bars.forEach((bar) => { const barWidth = bar * scale; ctx.fillRect(cursor, y, barWidth, height); cursor += barWidth + gap; });
 }
 
-function drawReceiptRecap({ tracks, artists, since, matched }, username) {
+function drawReceiptRecap({ tracks, artists, since, matched }, username, periodMonths) {
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#d4d0c5'; ctx.fillRect(0, 0, 1080, 1920);
@@ -140,47 +195,64 @@ function drawReceiptRecap({ tracks, artists, since, matched }, username) {
   for (let index = 0; index < 2600; index += 1) { ctx.fillStyle = `rgba(70,65,56,${Math.random() * .025})`; ctx.fillRect(55 + Math.random() * 970, 38 + Math.random() * 1845, 1, 1); }
   const now = new Date();
   receiptLabel(ctx, 'YTM-RECAP', 540, 132, { size: 56, weight: 700, align: 'center' });
-  receiptLabel(ctx, '30 HARI TERAKHIR', 540, 184, { size: 26, align: 'center' });
+  receiptLabel(ctx, periodText(periodMonths).toUpperCase(), 540, 184, { size: 26, align: 'center' });
   receiptLabel(ctx, `RECAP #${String(Math.floor(Math.random() * 10000)).padStart(4, '0')} FOR ${username.toUpperCase()}`, 82, 247, { size: 22, maxWidth: 900 });
   receiptLabel(ctx, jakartaDate(now), 82, 280, { size: 22 });
   receiptLine(ctx, 302);
-  receiptLabel(ctx, 'TOP 3 ARTISTS', 82, 344, { size: 25, weight: 700 });
+  receiptLabel(ctx, t('topArtists'), 82, 344, { size: 25, weight: 700 });
   artists.forEach(([artist, plays], index) => { const y = 382 + index * 38; receiptLabel(ctx, `${index + 1}.`, 82, y, { size: 23, weight: 700 }); receiptLabel(ctx, artist.toUpperCase(), 130, y, { size: 23, weight: 700, maxWidth: 650 }); receiptLabel(ctx, `${plays}x`, 998, y, { size: 23, weight: 700, align: 'right' }); });
   receiptLine(ctx, 506);
-  receiptLabel(ctx, 'NO', 82, 542, { size: 22, weight: 700 }); receiptLabel(ctx, 'ITEM', 155, 542, { size: 22, weight: 700 }); receiptLabel(ctx, 'PUTAR', 998, 542, { size: 22, weight: 700, align: 'right' });
+  receiptLabel(ctx, 'NO', 82, 542, { size: 22, weight: 700 }); receiptLabel(ctx, t('item'), 155, 542, { size: 22, weight: 700 }); receiptLabel(ctx, t('play'), 998, 542, { size: 22, weight: 700, align: 'right' });
   receiptLine(ctx, 560);
   tracks.forEach(([[track, artist], plays], index) => { const y = 604 + index * 88; receiptLabel(ctx, String(index + 1).padStart(2, '0'), 82, y, { size: 24, weight: 700 }); receiptLabel(ctx, `${track.toUpperCase()} — ${artist.toUpperCase()}`, 155, y, { size: 24, weight: 700, maxWidth: 650 }); receiptLabel(ctx, `${plays}x`, 998, y, { size: 24, weight: 700, align: 'right' }); receiptLine(ctx, y + 31); });
   const summaryY = 1475;
-  receiptLabel(ctx, 'ITEM COUNT:', 82, summaryY, { size: 22 }); receiptLabel(ctx, String(tracks.length).padStart(2, '0'), 998, summaryY, { size: 22, align: 'right' });
-  receiptLabel(ctx, 'TOTAL PLAY:', 82, summaryY + 35, { size: 22 }); receiptLabel(ctx, String(matched), 998, summaryY + 35, { size: 22, align: 'right' });
+  receiptLabel(ctx, t('itemCount'), 82, summaryY, { size: 22 }); receiptLabel(ctx, String(tracks.length).padStart(2, '0'), 998, summaryY, { size: 22, align: 'right' });
+  receiptLabel(ctx, t('totalPlay'), 82, summaryY + 35, { size: 22 }); receiptLabel(ctx, String(matched), 998, summaryY + 35, { size: 22, align: 'right' });
   receiptLine(ctx, summaryY + 60);
   const authCode = String(Math.floor(Math.random() * 999999)).padStart(6, '0');
   receiptLabel(ctx, 'CARD : **** **** **** 2026', 82, summaryY + 96, { size: 20 });
   receiptLabel(ctx, `AUTH CODE: ${authCode}`, 82, summaryY + 126, { size: 20 });
   receiptLabel(ctx, `CARDHOLDER: ${username.toUpperCase()}`, 82, summaryY + 156, { size: 20, maxWidth: 900 });
-  receiptLabel(ctx, 'THANK YOU FOR LISTENING!', 540, 1738, { size: 20, align: 'center' });
+  receiptLabel(ctx, t('thankYou'), 540, 1738, { size: 20, align: 'center' });
   receiptBarcode(ctx, 230, 1770, 620, 76);
   receiptLabel(ctx, 'YTM-Recap', 540, 1874, { size: 18, align: 'center' });
   return canvas;
 }
 
-fileInput.addEventListener('change', () => { fileLabel.textContent = fileInput.files[0]?.name || 'Pilih file JSON atau ZIP'; });
+function updateSubmitState() { button.disabled = !fileInput.files.length; }
+fileInput.addEventListener('change', () => { fileLabel.textContent = fileInput.files[0]?.name || t('uploadFile'); updateSubmitState(); });
 for (const eventName of ['dragenter', 'dragover']) document.querySelector('#upload-zone').addEventListener(eventName, (event) => { event.preventDefault(); event.currentTarget.classList.add('dragging'); });
 for (const eventName of ['dragleave', 'drop']) document.querySelector('#upload-zone').addEventListener(eventName, (event) => { event.preventDefault(); event.currentTarget.classList.remove('dragging'); });
-document.querySelector('#upload-zone').addEventListener('drop', (event) => { const [file] = event.dataTransfer.files; if (file) { const transfer = new DataTransfer(); transfer.items.add(file); fileInput.files = transfer.files; fileLabel.textContent = file.name; } });
-document.querySelectorAll('input[name="style"]').forEach((input) => input.addEventListener('change', () => document.querySelectorAll('.style-option').forEach((option) => option.classList.toggle('selected', option.querySelector('input').checked))));
+document.querySelector('#upload-zone').addEventListener('drop', (event) => { const [file] = event.dataTransfer.files; if (file) { const transfer = new DataTransfer(); transfer.items.add(file); fileInput.files = transfer.files; fileLabel.textContent = file.name; updateSubmitState(); } });
+document.querySelectorAll('input[name="style"]').forEach((input) => input.addEventListener('change', () => {
+  document.querySelectorAll('.style-option').forEach((option) => option.classList.toggle('selected', option.querySelector('input').checked));
+  document.querySelector('#glass-controls').classList.toggle('hidden', !document.querySelector('input[name="style"]:checked').value.includes('glass'));
+}));
+document.querySelector('#background-type').addEventListener('change', (event) => document.querySelector('#custom-background-controls').classList.toggle('hidden', event.target.value !== 'custom'));
+document.querySelector('#background-file').addEventListener('change', (event) => {
+  const [file] = event.target.files; if (!file) { backgroundImage = undefined; updateBackgroundPreview(); return; }
+  const image = new Image(); image.onload = () => { backgroundImage = image; updateBackgroundPreview(); }; image.src = URL.createObjectURL(file);
+});
+['#accent-color', '#background-blur', '#background-darkness', '#background-size', '#background-x', '#background-y'].forEach((selector) => {
+  document.querySelector(selector).addEventListener('input', updateBackgroundPreview);
+  document.querySelector(selector).addEventListener('change', updateBackgroundPreview);
+});
+document.querySelector('#language-toggle').addEventListener('click', () => { language = language === 'id' ? 'en' : 'id'; applyLanguage(); });
+applyLanguage();
+updateBackgroundPreview();
 
 form.addEventListener('submit', async (event) => {
-  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.firstChild.textContent = 'Membuat recap… ';
+  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.querySelector('[data-i18n="generate"]').textContent = t('generating');
   try {
-    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked);
-    if (!stats.matched) throw new Error('Tidak ada pemutaran YouTube Music dalam 30 hari terakhir pada file ini.');
-    const username = document.querySelector('#username').value.trim();
+    const periodMonths = Number(document.querySelector('#period').value);
+    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
+    if (!stats.matched) throw new Error(t('noHistory'));
+    const username = document.querySelector('#username').value.trim() || t('defaultName');
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
-    const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username) : drawGlassRecap(stats, username);
+    const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
     if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
-    if (currentUrl) URL.revokeObjectURL(currentUrl); currentUrl = URL.createObjectURL(blob); preview.src = currentUrl; downloadLink.href = currentUrl; document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString('id-ID')} pemutaran dianalisis dalam 30 hari terakhir.`; result.classList.remove('hidden'); result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (currentUrl) URL.revokeObjectURL(currentUrl); currentUrl = URL.createObjectURL(blob); preview.src = currentUrl; downloadLink.href = currentUrl; document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`; result.classList.remove('hidden'); result.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch (error) { status.textContent = error.message || 'Terjadi kesalahan saat memproses file.'; }
-  finally { button.disabled = false; button.firstChild.textContent = 'Buat recap '; }
+  finally { updateSubmitState(); button.querySelector('[data-i18n="generate"]').textContent = t('generate'); }
 });

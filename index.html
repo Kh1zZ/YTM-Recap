@@ -1,79 +1,140 @@
 <!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Buat YouTube Music recap dari Google Takeout langsung di browser." />
-    <title>YouTube Music Recap</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="page-shell">
-      <section class="intro">
-        <div class="brand"><span class="play-icon">▶</span> YOUTUBE MUSIC</div>
-        <h1>Recap musikmu,<br /><em>langsung dari browser.</em></h1>
-        <p>Upload histori Google Takeout, masukkan nama, lalu simpan recap-mu. Tidak ada akun, server, atau database.</p>
-        <div class="privacy-note"><span>✓</span> File diproses sepenuhnya di perangkatmu.</div>
-      </section>
 
-      <section class="generator-card" aria-labelledby="form-title">
-        <div class="card-heading">
-          <p class="eyebrow">YOUTUBE MUSIC RECAP</p>
-          <h2 id="form-title">Buat gambar recap</h2>
-        </div>
-        <form id="recap-form">
-          <label class="upload-zone" id="upload-zone" for="history-file">
-            <input id="history-file" type="file" accept="application/json,.json,application/zip,.zip" required />
-            <span class="upload-symbol">↑</span>
-            <strong id="file-label">Pilih file JSON atau ZIP</strong>
-            <small>File dari Google Takeout</small>
-          </label>
-          <details class="takeout-tutorial">
-            <summary>Cara mengambil histori dari <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a></summary>
-            <!-- Developer: edit the tutorial copy below directly in index.html. -->
-            <div class="tutorial-content">
-              <p><strong>1.</strong> Buka <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>, lalu klik <strong>Batalkan semua pilihan</strong>.</p>
-              <p><strong>2.</strong> Pilih <strong>YouTube dan YouTube Music</strong>, lalu lanjutkan ke langkah berikutnya.</p>
-              <p><strong>3.</strong> Buat ekspor. Setelah email dari Google datang, download file ZIP-nya.</p>
-              <p><strong>4.</strong> Upload ZIP tersebut langsung di atas—nggak perlu extract manual. Aplikasi akan mencari file histori tontonan otomatis.</p>
-            </div>
-          </details>
-          <label class="field-label" for="username">Nama atau nickname</label>
-          <input id="username" name="username" maxlength="40" placeholder="mis. kh1zz" autocomplete="nickname" required />
-          <fieldset class="style-picker">
-            <legend class="field-label">Pilih style gambar</legend>
-            <label class="style-option selected">
-              <input type="radio" name="style" value="glass" checked />
-              <span class="style-swatch glass-swatch"><i></i><i></i><i></i></span>
-              <span><strong>Glass</strong><small>Modern, gelap, dan berkilau</small></span>
-            </label>
-            <label class="style-option">
-              <input type="radio" name="style" value="receipt" />
-              <span class="style-swatch receipt-swatch"><i></i><i></i><i></i></span>
-              <span><strong>Receipt</strong><small>Minimal seperti struk belanja</small></span>
-            </label>
-          </fieldset>
-          <label class="checkbox-row" for="include-youtube">
-            <input id="include-youtube" type="checkbox" />
-            <span>Ikut hitung histori YouTube biasa <small>(bisa mencakup video non-musik)</small></span>
-          </label>
-          <button id="generate-button" type="submit">Buat recap <span>→</span></button>
-        </form>
-        <p id="status" class="status" role="status" aria-live="polite"></p>
-      </section>
-    </main>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Buat YouTube Music recap dari Google Takeout langsung di browser." />
+  <title>YouTube Music Recap</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
 
-    <section id="result" class="result hidden" aria-live="polite">
-      <div>
-        <p class="eyebrow">SUDAH JADI</p>
-        <h2>Ini recap-mu.</h2>
-        <p id="result-summary"></p>
-        <a id="download-link" class="download-button" download="youtube-music-recap.jpg">Download JPG <span>↓</span></a>
+<body>
+  <button id="language-toggle" class="language-toggle" type="button" aria-label="Change language">EN</button>
+  <main class="page-shell">
+    <section class="intro">
+      <div class="brand"><span class="play-icon">▶</span> YOUTUBE MUSIC</div>
+      <h1 data-i18n="headline">Recap musikmu,<br /><em>untuk kebutuhan story.</em></h1>
+      <p data-i18n="intro">Upload histori Google Takeout, kustomisasi recap-mu sesuka hati. Tidak ada akun, server,
+        maupun database.</p>
+      <div class="privacy-note"><span>✓</span> <span data-i18n="privacy">File diproses sepenuhnya di perangkatmu.</span>
       </div>
-      <img id="preview" alt="Preview YouTube Music recap" />
     </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="app.js"></script>
-  </body>
+    <section class="generator-card" aria-labelledby="form-title">
+      <div class="card-heading">
+        <p class="eyebrow">YOUTUBE MUSIC RECAP</p>
+        <h2 id="form-title" data-i18n="formTitle">Buat gambar recap</h2>
+      </div>
+      <form id="recap-form">
+        <label class="upload-zone" id="upload-zone" for="history-file">
+          <input id="history-file" type="file" accept="application/json,.json,application/zip,.zip" required />
+          <span class="upload-symbol">↑</span>
+          <strong id="file-label" data-i18n="uploadFile">Upload file JSON atau ZIP</strong>
+          <small data-i18n="takeoutFile">File dari Google Takeout</small>
+        </label>
+        <details class="takeout-tutorial">
+          <summary data-i18n="tutorialSummary">Cara mengambil histori dari <a href="https://takeout.google.com/"
+              target="_blank" rel="noreferrer">Google Takeout</a></summary>
+          <div class="tutorial-content" data-i18n="tutorialContent">
+            <p><strong>1.</strong> Buka <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google
+                Takeout</a>, lalu klik <strong>Batalkan semua pilihan</strong>.</p>
+            <p><strong>2.</strong> Pilih <strong>YouTube dan YouTube Music</strong>, lalu lanjutkan ke langkah
+              berikutnya.</p>
+            <p><strong>3.</strong> Buat ekspor. Setelah email dari Google datang, download file ZIP-nya.</p>
+            <p><strong>4.</strong> Upload ZIP tersebut langsung di atas—nggak perlu extract manual. Aplikasi akan
+              mencari file histori tontonan otomatis.</p>
+          </div>
+        </details>
+        <label class="field-label" for="username" data-i18n="nameLabel">Nama atau nickname
+          <span>(opsional)</span></label>
+        <input id="username" name="username" maxlength="40" placeholder="masukkan nama" autocomplete="nickname" />
+        <label class="field-label" for="period" data-i18n="periodLabel">Rentang recap</label>
+        <select id="period" name="period">
+          <option value="1" data-i18n="period1">1 bulan terakhir</option>
+          <option value="6" data-i18n="period6">6 bulan terakhir</option>
+          <option value="12" data-i18n="period12">1 tahun terakhir</option>
+        </select>
+        <fieldset class="style-picker">
+          <legend class="field-label" data-i18n="styleLabel">Pilih style gambar</legend>
+          <label class="style-option selected">
+            <input type="radio" name="style" value="glass" checked />
+            <span class="style-swatch glass-swatch"><i></i><i></i><i></i></span>
+            <span><strong>Glass</strong><small data-i18n="glassDesc">Modern, gelap, dan berkilau</small></span>
+          </label>
+          <label class="style-option">
+            <input type="radio" name="style" value="receipt" />
+            <span class="style-swatch receipt-swatch"><i></i><i></i><i></i></span>
+            <span><strong>Receipt</strong><small data-i18n="receiptDesc">Minimal seperti struk belanja</small></span>
+          </label>
+        </fieldset>
+        <section id="glass-controls" class="glass-controls">
+          <label class="field-label" for="accent-color" data-i18n="accentLabel">Warna dominan</label>
+          <select id="accent-color" name="accent-color">
+            <option value="default" data-i18n="defaultColor">Default</option>
+            <option value="red" data-i18n="red">Merah</option>
+            <option value="blue" data-i18n="blue">Biru</option>
+            <option value="purple" data-i18n="purple">Ungu</option>
+            <option value="green" data-i18n="green">Hijau</option>
+            <option value="yellow" data-i18n="yellow">Kuning</option>
+            <option value="pink" data-i18n="pink">Pink</option>
+            <option value="brown" data-i18n="brown">Coklat</option>
+            <option value="gray" data-i18n="gray">Abu-hitam</option>
+          </select>
+          <label class="field-label" for="background-type" data-i18n="backgroundLabel">Latar belakang</label>
+          <select id="background-type" name="background-type">
+            <option value="gradient" data-i18n="gradient">Gradasi warna</option>
+            <option value="custom" data-i18n="custom">Gambar sendiri</option>
+          </select>
+          <div id="custom-background-controls" class="custom-background-controls hidden">
+            <label class="background-upload" for="background-file"><span data-i18n="backgroundUpload">Upload gambar
+                background</span><input id="background-file" type="file" accept="image/*" /></label>
+            <div class="background-preview-wrap">
+              <canvas id="background-preview" width="180" height="320" aria-label="Preview background"></canvas>
+              <small data-i18n="backgroundPreview">Preview background</small>
+            </div>
+            <div class="slider-grid">
+              <label><span data-i18n="blur">Blur</span><input id="background-blur" type="range" min="0" max="24"
+                  value="8" /></label>
+              <label><span data-i18n="darkness">Kegelapan</span><input id="background-darkness" type="range" min="0"
+                  max="80" value="40" /></label>
+              <label><span data-i18n="size">Ukuran</span><input id="background-size" type="range" min="100" max="220"
+                  value="120" /></label>
+              <label><span data-i18n="positionX">Posisi horizontal</span><input id="background-x" type="range" min="0"
+                  max="100" value="50" /></label>
+              <label><span data-i18n="positionY">Posisi vertikal</span><input id="background-y" type="range" min="0"
+                  max="100" value="50" /></label>
+            </div>
+          </div>
+        </section>
+        <label class="checkbox-row" for="include-youtube">
+          <input id="include-youtube" type="checkbox" />
+          <span data-i18n="includeYoutube">Ikut hitung histori YouTube biasa <small>(bisa mencakup video
+              non-musik)</small></span>
+        </label>
+        <button id="generate-button" type="submit" disabled><span data-i18n="generate">Buat recap</span>
+          <span>→</span></button>
+      </form>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <section id="result" class="result hidden" aria-live="polite">
+    <div>
+      <p class="eyebrow">SUDAH JADI</p>
+      <h2 data-i18n="resultTitle">Ini recap-mu.</h2>
+      <p id="result-summary"></p>
+      <a id="download-link" class="download-button" download="youtube-music-recap.jpg"><span
+          data-i18n="download">Download JPG</span> <span>↓</span></a>
+    </div>
+    <img id="preview" alt="Preview YouTube Music recap" />
+  </section>
+  <footer><span data-i18n="footer">Dibuat oleh kegabutan/bored ·</span> <a href="https://github.com/Kh1zZ" target="_blank"
+      rel="noreferrer">GitHub</a> · <a href="https://akhiscxh.carrd.co" target="_blank" rel="noreferrer">carrd.co</a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
 </html>
