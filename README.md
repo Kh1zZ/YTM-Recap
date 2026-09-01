@@ -45,11 +45,14 @@ Tidak perlu login, akun, maupun koneksi ke server. Semua file histori Google Tak
 ## 💻 Menjalankan Secara Lokal
 
 ### 1. Web Version (HTML/JS)
+
 Halaman web ini sepenuhnya statis (Vanilla HTML, CSS, JS). Kamu bisa:
+
 - Membuka file `index.html` langsung di browser, atau
 - Menjalankannya menggunakan ekstensi **Live Server** di VS Code.
 
 ### 2. CLI / Node.js Version
+
 Generator via terminal juga tersedia untuk membuat gambar versi Glass:
 
 ```powershell
@@ -70,4 +73,3 @@ Hasil gambar akan disimpan di `output/youtube_music_recap.jpg`.
 ## 📄 Lisensi
 
 Proyek ini berada di bawah lisensi [MIT License](LICENSE).
-
