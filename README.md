@@ -2,6 +2,10 @@
 
 Generator Node.js yang membuat recap YouTube Music vertikal 1080×1920 dalam format JPG. Recap memuat 10 lagu dan 3 artis yang paling sering diputar selama 30 hari terakhir dari ekspor JSON Google Takeout.
 
+## Versi web (tanpa server)
+
+Buka `index.html` di browser, unggah file JSON histori Google Takeout, isi nama/nickname, pilih style **Glass** atau **Receipt**, lalu tekan **Buat recap**. File tidak dikirim ke mana pun: seluruh pembacaan data dan pembuatan JPG terjadi di browser Anda. Gambar yang jadi dapat langsung diunduh.
+
 ## Persiapan
 
 Pasang [Node.js LTS](https://nodejs.org/) (versi 20 atau lebih baru), lalu dari folder proyek jalankan:

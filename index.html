@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Buat YouTube Music recap dari Google Takeout langsung di browser." />
+    <title>YouTube Music Recap</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="intro">
+        <div class="brand"><span class="play-icon">▶</span> YOUTUBE MUSIC</div>
+        <h1>Recap musikmu,<br /><em>langsung dari browser.</em></h1>
+        <p>Upload histori Google Takeout, masukkan nama, lalu simpan recap-mu. Tidak ada akun, server, atau database.</p>
+        <div class="privacy-note"><span>✓</span> File diproses sepenuhnya di perangkatmu.</div>
+      </section>
+
+      <section class="generator-card" aria-labelledby="form-title">
+        <div class="card-heading">
+          <p class="eyebrow">YOUTUBE MUSIC RECAP</p>
+          <h2 id="form-title">Buat gambar recap</h2>
+        </div>
+        <form id="recap-form">
+          <label class="upload-zone" id="upload-zone" for="history-file">
+            <input id="history-file" type="file" accept="application/json,.json" required />
+            <span class="upload-symbol">↑</span>
+            <strong id="file-label">Pilih file histori JSON</strong>
+            <small>File dari Google Takeout</small>
+          </label>
+          <label class="field-label" for="username">Nama atau nickname</label>
+          <input id="username" name="username" maxlength="40" placeholder="mis. kh1zz" autocomplete="nickname" required />
+          <fieldset class="style-picker">
+            <legend class="field-label">Pilih style gambar</legend>
+            <label class="style-option selected">
+              <input type="radio" name="style" value="glass" checked />
+              <span class="style-swatch glass-swatch"><i></i><i></i><i></i></span>
+              <span><strong>Glass</strong><small>Modern, gelap, dan berkilau</small></span>
+            </label>
+            <label class="style-option">
+              <input type="radio" name="style" value="receipt" />
+              <span class="style-swatch receipt-swatch"><i></i><i></i><i></i></span>
+              <span><strong>Receipt</strong><small>Minimal seperti struk belanja</small></span>
+            </label>
+          </fieldset>
+          <label class="checkbox-row" for="include-youtube">
+            <input id="include-youtube" type="checkbox" />
+            <span>Ikut hitung histori YouTube biasa <small>(bisa mencakup video non-musik)</small></span>
+          </label>
+          <button id="generate-button" type="submit">Buat recap <span>→</span></button>
+        </form>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <section id="result" class="result hidden" aria-live="polite">
+      <div>
+        <p class="eyebrow">SUDAH JADI</p>
+        <h2>Ini recap-mu.</h2>
+        <p id="result-summary"></p>
+        <a id="download-link" class="download-button" download="youtube-music-recap.jpg">Download JPG <span>↓</span></a>
+      </div>
+      <img id="preview" alt="Preview YouTube Music recap" />
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>
