@@ -72,4 +72,4 @@ Hasil gambar akan disimpan di `output/youtube_music_recap.jpg`.
 
 ## 📄 Lisensi
 
-Proyek ini berada di bawah lisensi [MIT License](LICENSE).
+Proyek ini berada di bawah lisensi [GNU General Public License v3.0](LICENSE).
