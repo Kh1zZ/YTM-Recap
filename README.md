@@ -1,39 +1,36 @@
-# YouTube Music Takeout Stats
+# YTM-Recap
 
-Generator Node.js yang membuat recap YouTube Music vertikal 1080×1920 dalam format JPG. Recap memuat 10 lagu dan 3 artis yang paling sering diputar selama 30 hari terakhir dari ekspor JSON Google Takeout.
+Buat recap YouTube Music dari Google Takeout langsung di browser.
 
-## Versi web (tanpa server)
+**[Buka YTM-Recap →](https://ytm-recap-kh1z.vercel.app/)**
 
-Buka `index.html` di browser, unggah file JSON histori Google Takeout, isi nama/nickname, pilih style **Glass** atau **Receipt**, lalu tekan **Buat recap**. File tidak dikirim ke mana pun: seluruh pembacaan data dan pembuatan JPG terjadi di browser Anda. Gambar yang jadi dapat langsung diunduh.
+Tidak perlu akun atau database. File histori diproses langsung di perangkat pengguna dan tidak diunggah ke server.
 
-## Persiapan
+## Cara pakai
 
-Pasang [Node.js LTS](https://nodejs.org/) (versi 20 atau lebih baru), lalu dari folder proyek jalankan:
+1. Buka [ytm-recap-kh1z.vercel.app](https://ytm-recap-kh1z.vercel.app/).
+2. Download ekspor **YouTube dan YouTube Music** dari [Google Takeout](https://takeout.google.com/).
+3. Upload file ZIP Takeout langsung ke halaman—tidak perlu extract manual. File JSON histori juga didukung.
+4. Isi nama atau nickname, lalu pilih style **Glass** atau **Receipt**.
+5. Klik **Buat recap**, lalu download gambar JPG-nya.
+
+## Fitur
+
+- Analisis pemutaran YouTube Music selama 30 hari terakhir.
+- Menampilkan Top 3 Artist dan Top 10 Lagu.
+- Dua pilihan desain: Glass dan Receipt.
+- Menerima JSON maupun ZIP Google Takeout.
+- Membuat dan mengunduh JPG 1080×1920 langsung dari browser.
+
+## Menjalankan lokal
+
+Halaman web bersifat statis. Cukup buka `index.html` dengan browser, atau jalankan lewat ekstensi Live Server di VS Code.
+
+Generator Node.js juga tetap tersedia untuk membuat versi Glass dari terminal:
 
 ```powershell
 npm install
-```
-
-Ekstrak Google Takeout lalu salin file atau folder JSON-nya ke dalam folder `input` proyek ini.
-
-## Menjalankan
-
-```powershell
-npm run recap
-```
-
-Hasil dibuat di `output/youtube_music_recap.jpg`.
-
-Tambahkan nama atau username pada gambar dengan opsi `--name`:
-
-```powershell
 npm run recap -- --name "kh1zz"
 ```
 
-Secara bawaan, hanya event yang jelas berasal dari YouTube Music yang dihitung. Jika histori Anda hanya memakai URL `youtube.com`, gunakan:
-
-```powershell
-npm run recap -- --include-youtube
-```
-
-Opsi tersebut dapat ikut menghitung video non-musik. Nama artis diambil dari informasi channel/artis pada setiap event Takeout; bila tidak tersedia, artis tidak dapat dihitung.
+Hasil terminal dibuat di `output/youtube_music_recap.jpg`.
