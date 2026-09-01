@@ -20,8 +20,8 @@ h1 em { color: #ff8298; font-style: normal; }
 .field-label { display: block; margin: 24px 0 8px; color: #d7d3df; font-size: 14px; font-weight: bold; }
 #username { width: 100%; border: 1px solid rgba(255,255,255,.2); border-radius: 11px; padding: 14px; background: rgba(0,0,0,.18); color: #fff; font: inherit; outline: none; }
 #username:focus { border-color: #ff6683; }
-.style-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; border: 0; }
-.style-picker .field-label { grid-column: 1 / -1; }
+.style-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 34px 0 0; padding: 0; border: 0; }
+.style-picker .field-label { grid-column: 1 / -1; margin: 0 0 10px; }
 .style-option { display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; color: #ded9e7; cursor: pointer; transition: .2s; }
 .style-option.selected { border-color: #ff6683; background: rgba(255,74,108,.1); }
 .style-option input { position: absolute; opacity: 0; }
@@ -40,6 +40,12 @@ button, .download-button { display: flex; width: 100%; justify-content: space-be
 button:hover, .download-button:hover { background: #ff1747; transform: translateY(-2px); }
 button:disabled { opacity: .65; cursor: wait; transform: none; }
 .status { min-height: 20px; margin: 17px 0 0; color: #ffb0bd; font-size: 13px; line-height: 1.4; }
+.takeout-tutorial { margin-top: 14px; border: 1px solid rgba(255,255,255,.15); border-radius: 11px; background: rgba(0,0,0,.12); color: #d9d4df; }
+.takeout-tutorial summary { padding: 12px 14px; color: #ff9aab; cursor: pointer; font-size: 13px; font-weight: 700; }
+.takeout-tutorial summary a { color: inherit; text-underline-offset: 3px; }
+.tutorial-content { padding: 0 14px 2px; color: #ccc6d3; font-size: 13px; line-height: 1.5; }
+.tutorial-content p { margin: 0 0 10px; }
+.tutorial-content a { color: #ff91a6; }
 .result { display: grid; grid-template-columns: 1fr 300px; gap: 70px; align-items: center; margin-bottom: 90px; padding: 44px; border-top: 1px solid rgba(255,255,255,.12); }
 .result p:not(.eyebrow) { color: #c8c4d1; line-height: 1.6; }
 .result .download-button { width: min(260px, 100%); margin-top: 24px; }

@@ -23,11 +23,21 @@
         </div>
         <form id="recap-form">
           <label class="upload-zone" id="upload-zone" for="history-file">
-            <input id="history-file" type="file" accept="application/json,.json" required />
+            <input id="history-file" type="file" accept="application/json,.json,application/zip,.zip" required />
             <span class="upload-symbol">↑</span>
-            <strong id="file-label">Pilih file histori JSON</strong>
+            <strong id="file-label">Pilih file JSON atau ZIP</strong>
             <small>File dari Google Takeout</small>
           </label>
+          <details class="takeout-tutorial">
+            <summary>Cara mengambil histori dari <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a></summary>
+            <!-- Developer: edit the tutorial copy below directly in index.html. -->
+            <div class="tutorial-content">
+              <p><strong>1.</strong> Buka <a href="https://takeout.google.com/" target="_blank" rel="noreferrer">Google Takeout</a>, lalu klik <strong>Batalkan semua pilihan</strong>.</p>
+              <p><strong>2.</strong> Pilih <strong>YouTube dan YouTube Music</strong>, lalu lanjutkan ke langkah berikutnya.</p>
+              <p><strong>3.</strong> Buat ekspor. Setelah email dari Google datang, download file ZIP-nya.</p>
+              <p><strong>4.</strong> Upload ZIP tersebut langsung di atas—nggak perlu extract manual. Aplikasi akan mencari file histori tontonan otomatis.</p>
+            </div>
+          </details>
           <label class="field-label" for="username">Nama atau nickname</label>
           <input id="username" name="username" maxlength="40" placeholder="mis. kh1zz" autocomplete="nickname" required />
           <fieldset class="style-picker">
@@ -63,6 +73,7 @@
       <img id="preview" alt="Preview YouTube Music recap" />
     </section>
 
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

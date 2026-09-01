@@ -52,6 +52,25 @@ function buildStats(data, includeYoutube) {
   };
 }
 
+async function historyFromFile(file) {
+  const isZip = file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip';
+  if (!isZip) return JSON.parse(await file.text());
+  if (!window.JSZip) throw new Error('Fitur pembaca ZIP belum siap. Periksa koneksi internet lalu coba lagi.');
+  const archive = await window.JSZip.loadAsync(file);
+  const score = (name) => {
+    const value = name.toLowerCase();
+    return (value.includes('histori-tontonan') || value.includes('watch-history') ? 10 : 0) + (value.includes('history') || value.includes('histori') ? 2 : 0);
+  };
+  const files = Object.values(archive.files).filter((entry) => !entry.dir && entry.name.toLowerCase().endsWith('.json')).sort((a, b) => score(b.name) - score(a.name));
+  for (const entry of files) {
+    try {
+      const data = JSON.parse(await entry.async('text'));
+      if (Array.isArray(data) && data.some((item) => item && typeof item === 'object' && ('title' in item || 'time' in item))) return data;
+    } catch { /* Try the next JSON file inside the archive. */ }
+  }
+  throw new Error('File ZIP ini tidak memuat histori tontonan YouTube yang dapat dibaca.');
+}
+
 function roundedRect(ctx, x, y, width, height, radius, fill, stroke) {
   ctx.beginPath(); ctx.roundRect(x, y, width, height, radius);
   if (fill) { ctx.fillStyle = fill; ctx.fill(); }
@@ -85,7 +104,7 @@ function drawGlassRecap({ tracks, artists, since }, username) {
   label(ctx, 'YOUTUBE MUSIC', 135, 110, { size: 28, weight: 700, color: '#ff536f' });
   label(ctx, username, 1024, 112, { size: 40, weight: 700, align: 'right', maxWidth: 500 });
   label(ctx, 'YouTube Music', 56, 215, { size: 53, weight: 700 });
-  const now = new Date(); label(ctx, `Recap ${months[Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', month: 'numeric' }).format(now)) - 1]}`, 56, 300, { size: 62, weight: 700 });
+  const now = new Date(); label(ctx, 'Recap', 56, 300, { size: 62, weight: 700 });
   label(ctx, `${jakartaDate(since)} — ${jakartaDate(now)}  ·  30 hari terakhir`, 58, 350, { size: 22, color: '#e6e5f0' });
   for (let rank = 0; rank < 3; rank += 1) { const y = 385 + rank * 122; roundedRect(ctx, 56, y, 968, 105, 28, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); const entry = artists[rank]; if (!entry) continue; const [artist, plays] = entry; ctx.fillStyle = '#ff234f'; ctx.beginPath(); ctx.arc(108, y + 53, 28, 0, Math.PI * 2); ctx.fill(); label(ctx, String(rank + 1), 108, y + 63, { size: 28, weight: 700, align: 'center' }); label(ctx, artist, 165, y + 53, { size: 28, weight: 700, maxWidth: 640 }); label(ctx, `${plays} kali diputar`, 165, y + 87, { size: 22, color: '#e6e5f0' }); }
   label(ctx, 'Top 10 lagu', 56, 815, { size: 53, weight: 700 }); label(ctx, 'PUTAR', 1024, 815, { size: 22, color: '#e6e5f0', align: 'right' });
@@ -145,7 +164,7 @@ function drawReceiptRecap({ tracks, artists, since, matched }, username) {
   return canvas;
 }
 
-fileInput.addEventListener('change', () => { fileLabel.textContent = fileInput.files[0]?.name || 'Pilih file histori JSON'; });
+fileInput.addEventListener('change', () => { fileLabel.textContent = fileInput.files[0]?.name || 'Pilih file JSON atau ZIP'; });
 for (const eventName of ['dragenter', 'dragover']) document.querySelector('#upload-zone').addEventListener(eventName, (event) => { event.preventDefault(); event.currentTarget.classList.add('dragging'); });
 for (const eventName of ['dragleave', 'drop']) document.querySelector('#upload-zone').addEventListener(eventName, (event) => { event.preventDefault(); event.currentTarget.classList.remove('dragging'); });
 document.querySelector('#upload-zone').addEventListener('drop', (event) => { const [file] = event.dataTransfer.files; if (file) { const transfer = new DataTransfer(); transfer.items.add(file); fileInput.files = transfer.files; fileLabel.textContent = file.name; } });
@@ -154,7 +173,7 @@ document.querySelectorAll('input[name="style"]').forEach((input) => input.addEve
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.firstChild.textContent = 'Membuat recap… ';
   try {
-    const raw = await fileInput.files[0].text(); const stats = buildStats(JSON.parse(raw), document.querySelector('#include-youtube').checked);
+    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked);
     if (!stats.matched) throw new Error('Tidak ada pemutaran YouTube Music dalam 30 hari terakhir pada file ini.');
     const username = document.querySelector('#username').value.trim();
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
