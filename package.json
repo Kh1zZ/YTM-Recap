@@ -2,15 +2,5 @@
   "name": "youtube-music-takeout-stats",
   "version": "1.0.0",
   "private": true,
-  "description": "Create a YouTube Music recap image from Google Takeout history.",
-  "type": "module",
-  "scripts": {
-    "recap": "node youtube_music_stats.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "sharp": "^0.34.0"
-  }
+  "description": "Create a YouTube Music recap image from Google Takeout history."
 }

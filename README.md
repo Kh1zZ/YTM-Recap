@@ -44,29 +44,10 @@ Tidak perlu login, akun, maupun koneksi ke server. Semua file histori Google Tak
 
 ## 💻 Menjalankan Secara Lokal
 
-### 1. Web Version (HTML/JS)
-
 Halaman web ini sepenuhnya statis (Vanilla HTML, CSS, JS). Kamu bisa:
 
 - Membuka file `index.html` langsung di browser, atau
 - Menjalankannya menggunakan ekstensi **Live Server** di VS Code.
-
-### 2. CLI / Node.js Version
-
-Generator via terminal juga tersedia untuk membuat gambar versi Glass:
-
-```powershell
-# Install dependencies
-npm install
-
-# Masukkan file JSON histori ke folder input/ lalu jalankan:
-npm run recap -- --name "NamaKamu"
-
-# Opsi tambahan untuk menyertakan histori YouTube biasa:
-npm run recap -- --name "NamaKamu" --include-youtube
-```
-
-Hasil gambar akan disimpan di `output/youtube_music_recap.jpg`.
 
 ---
 
