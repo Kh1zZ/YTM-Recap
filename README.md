@@ -1,36 +1,73 @@
 # YTM-Recap
 
-Buat recap YouTube Music dari Google Takeout langsung di browser.
+Buat recap YouTube Music dari Google Takeout langsung di browser secara instan dan privat.
 
 **[Buka YTM-Recap →](https://ytm-recap-kh1z.vercel.app/)**
 
-Tidak perlu akun atau database. File histori diproses langsung di perangkat pengguna dan tidak diunggah ke server.
+---
 
-## Cara pakai
+## 🔒 Privasi & Keamanan Terjamin
 
-1. Buka [ytm-recap-kh1z.vercel.app](https://ytm-recap-kh1z.vercel.app/).
-2. Download ekspor **YouTube dan YouTube Music** dari [Google Takeout](https://takeout.google.com/).
-3. Upload file ZIP Takeout langsung ke halaman—tidak perlu extract manual. File JSON histori juga didukung.
-4. Isi nama atau nickname, lalu pilih style **Glass** atau **Receipt**.
-5. Klik **Buat recap**, lalu download gambar JPG-nya.
+Tidak perlu login, akun, maupun koneksi ke server. Semua file histori Google Takeout diproses **100% di perangkat kamu (client-side)** melalui browser dan tidak pernah diunggah ke mana pun.
 
-## Fitur
+---
 
-- Analisis pemutaran YouTube Music selama 30 hari terakhir.
-- Menampilkan Top 3 Artist dan Top 10 Lagu.
-- Dua pilihan desain: Glass dan Receipt.
-- Menerima JSON maupun ZIP Google Takeout.
-- Membuat dan mengunduh JPG 1080×1920 langsung dari browser.
+## ✨ Fitur Utama
 
-## Menjalankan lokal
+- 📦 **Dukungan ZIP & JSON**: Upload langsung file ZIP hasil unduhan Google Takeout tanpa perlu diekstrak manual, atau pilih file JSON histori tontonan.
+- ⏱️ **Pilihan Rentang Waktu**:
+  - 1 bulan terakhir
+  - 6 bulan terakhir
+  - 1 tahun terakhir
+- 🎨 **Dua Pilihan Gaya Desain**:
+  - **Glass**: Desain modern, gelap, dan berkilau. Mendukung 9 pilihan warna dominan (Default, Merah, Biru, Ungu, Hijau, Kuning, Pink, Coklat, Abu-hitam) serta kustomisasi background sendiri (upload gambar + kontrol blur, kegelapan, ukuran, dan posisi).
+  - **Receipt**: Desain minimalis monokrom bergaya struk belanja, lengkap dengan barcode, nomor item, dan total putar.
+- 🌐 **Multi-bahasa Dinamis**: Beralih antara **Bahasa Indonesia (ID)** dan **English (EN)** secara instan.
+- 🎵 **Opsi Filter Video**: Pilihan untuk menyertakan histori pemutaran video YouTube reguler (opsional).
+- 📱 **Siap untuk Story**: Output gambar berformat JPG resolusi tinggi **1080×1920 (9:16)** yang pas untuk Instagram Story, WhatsApp Status, atau TikTok.
 
-Halaman web bersifat statis. Cukup buka `index.html` dengan browser, atau jalankan lewat ekstensi Live Server di VS Code.
+---
 
-Generator Node.js juga tetap tersedia untuk membuat versi Glass dari terminal:
+## 📖 Cara Menggunakan
+
+1. Kunjungi **[ytm-recap-kh1z.vercel.app](https://ytm-recap-kh1z.vercel.app/)**.
+2. Ambil histori dari [Google Takeout](https://takeout.google.com/):
+   - Klik **Batalkan semua pilihan** (*Deselect all*).
+   - Centang **YouTube dan YouTube Music**.
+   - Klik **Langkah berikutnya** dan buat ekspor.
+   - Unduh file ZIP yang dikirimkan Google ke email kamu.
+3. Upload file ZIP tersebut langsung ke web YTM-Recap.
+4. Sesuaikan nama/nickname, rentang waktu, gaya recap, dan warna/background sesuai selera.
+5. Klik **Buat recap** dan download gambar hasilnya.
+
+---
+
+## 💻 Menjalankan Secara Lokal
+
+### 1. Web Version (HTML/JS)
+Halaman web ini sepenuhnya statis (Vanilla HTML, CSS, JS). Kamu bisa:
+- Membuka file `index.html` langsung di browser, atau
+- Menjalankannya menggunakan ekstensi **Live Server** di VS Code.
+
+### 2. CLI / Node.js Version
+Generator via terminal juga tersedia untuk membuat gambar versi Glass:
 
 ```powershell
+# Install dependencies
 npm install
-npm run recap -- --name "(nama)"
+
+# Masukkan file JSON histori ke folder input/ lalu jalankan:
+npm run recap -- --name "NamaKamu"
+
+# Opsi tambahan untuk menyertakan histori YouTube biasa:
+npm run recap -- --name "NamaKamu" --include-youtube
 ```
 
-Hasil terminal dibuat di `output/youtube_music_recap.jpg`.
+Hasil gambar akan disimpan di `output/youtube_music_recap.jpg`.
+
+---
+
+## 📄 Lisensi
+
+Proyek ini berada di bawah lisensi [MIT License](LICENSE).
+
