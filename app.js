@@ -109,6 +109,24 @@ function label(ctx, value, x, y, options = {}) {
   ctx.fillText(maxWidth ? truncate(ctx, value, maxWidth) : value, x, y);
 }
 
+// Canvas positions text by its baseline. Measure each line so the complete
+// title/subtitle group stays optically centered inside its card.
+function centeredTextBlock(ctx, lines, x, centerY) {
+  const measured = lines.map((line) => {
+    ctx.font = `${line.weight || 400} ${line.size || 28}px Arial, sans-serif`;
+    const metrics = ctx.measureText(line.value);
+    return { ...line, ascent: metrics.actualBoundingBoxAscent, descent: metrics.actualBoundingBoxDescent };
+  });
+  const gap = 4;
+  const height = measured.reduce((total, line) => total + line.ascent + line.descent, 0) + gap * Math.max(0, measured.length - 1);
+  let cursor = centerY - height / 2;
+  measured.forEach((line) => {
+    cursor += line.ascent;
+    label(ctx, line.value, x, cursor, line);
+    cursor += line.descent + gap;
+  });
+}
+
 function jakartaDate(value) {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(value);
   return `${parts.find((p) => p.type === 'year').value}-${parts.find((p) => p.type === 'month').value}-${parts.find((p) => p.type === 'day').value}`;
@@ -155,15 +173,19 @@ function drawGlassRecap({ tracks, artists, since }, username, periodMonths) {
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
   const ctx = canvas.getContext('2d');
   const accent = drawBackground(ctx);
-  roundedRect(ctx, 56, 78, 59, 40, 12, '#ff0033'); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(80, 87); ctx.lineTo(80, 109); ctx.lineTo(100, 98); ctx.fill();
-  label(ctx, 'YOUTUBE MUSIC', 135, 110, { size: 28, weight: 700, color: '#ff536f' });
-  label(ctx, username, 1024, 112, { size: 40, weight: 700, align: 'right', maxWidth: 500 });
-  label(ctx, 'YouTube Music', 56, 215, { size: 53, weight: 700 });
-  const now = new Date(); label(ctx, 'Recap', 56, 300, { size: 62, weight: 700 });
-  label(ctx, `${jakartaDate(since)} — ${jakartaDate(now)}  ·  ${periodText(periodMonths)}`, 58, 350, { size: 22, color: '#e6e5f0' });
-  for (let rank = 0; rank < 3; rank += 1) { const y = 385 + rank * 122; roundedRect(ctx, 56, y, 968, 105, 28, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); const entry = artists[rank]; if (!entry) continue; const [artist, plays] = entry; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(108, y + 53, 28, 0, Math.PI * 2); ctx.fill(); label(ctx, String(rank + 1), 108, y + 63, { size: 28, weight: 700, align: 'center' }); label(ctx, artist, 165, y + 53, { size: 28, weight: 700, maxWidth: 640 }); label(ctx, `${plays} ${t('plays')}`, 165, y + 87, { size: 22, color: '#e6e5f0' }); }
-  label(ctx, t('topTracks'), 56, 815, { size: 53, weight: 700 }); label(ctx, t('play'), 1024, 815, { size: 22, color: '#e6e5f0', align: 'right' });
-  tracks.forEach(([[track, artist], plays], index) => { const y = 840 + index * 91; roundedRect(ctx, 56, y, 968, 81, 22, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); label(ctx, String(index + 1).padStart(2, '0'), 80, y + 51, { size: 22, color: '#e6e5f0' }); label(ctx, track, 156, y + 43, { size: 28, weight: 700, maxWidth: 620 }); label(ctx, artist, 156, y + 70, { size: 22, color: '#e6e5f0', maxWidth: 620 }); label(ctx, `${plays}×`, 995, y + 52, { size: 28, weight: 700, align: 'right' }); });
+  // Header follows the compact YouTube Music Recap lockup from the reference.
+  ctx.fillStyle = '#ff0033'; ctx.beginPath(); ctx.arc(116, 132, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(116, 132, 30, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(108, 115); ctx.lineTo(108, 149); ctx.lineTo(137, 132); ctx.fill();
+  label(ctx, 'YouTube Music', 204, 119, { size: 51, weight: 700 });
+  label(ctx, 'RECAP', 204, 181, { size: 62, weight: 700 });
+  label(ctx, username, 1024, 154, { size: 42, weight: 700, align: 'right', maxWidth: 390 });
+  const now = new Date();
+  label(ctx, `${jakartaDate(since)} — ${jakartaDate(now)}  |  ${periodText(periodMonths)}`, 56, 256, { size: 22, color: '#e6e5f0' });
+  for (let rank = 0; rank < 3; rank += 1) { const y = 300 + rank * 122; roundedRect(ctx, 56, y, 968, 105, 28, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); const entry = artists[rank]; if (!entry) continue; const [artist, plays] = entry; ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(108, y + 53, 28, 0, Math.PI * 2); ctx.fill(); label(ctx, String(rank + 1), 108, y + 63, { size: 28, weight: 700, align: 'center' }); centeredTextBlock(ctx, [{ value: artist, size: 28, weight: 700, maxWidth: 640 }, { value: `${plays} ${t('plays')}`, size: 22, color: '#e6e5f0', maxWidth: 640 }], 165, y + 53); }
+  label(ctx, t('topTracks'), 56, 730, { size: 53, weight: 700 }); label(ctx, t('play'), 1024, 730, { size: 22, color: '#e6e5f0', align: 'right' });
+  tracks.forEach(([[track, artist], plays], index) => { const y = 755 + index * 91; roundedRect(ctx, 56, y, 968, 81, 22, 'rgba(255,255,255,.10)', 'rgba(255,255,255,.22)'); label(ctx, String(index + 1).padStart(2, '0'), 80, y + 48, { size: 22, color: '#e6e5f0' }); centeredTextBlock(ctx, [{ value: track, size: 28, weight: 700, maxWidth: 620 }, { value: artist, size: 22, color: '#e6e5f0', maxWidth: 620 }], 156, y + 41); label(ctx, `${plays}×`, 995, y + 51, { size: 28, weight: 700, align: 'right' }); });
+  label(ctx, 'ytm-recap-kh1z.vercel.app', 540, 1840, { size: 22, weight: 700, color: '#e6e5f0', align: 'center' });
   return canvas;
 }
 
@@ -194,7 +216,7 @@ function drawReceiptRecap({ tracks, artists, since, matched }, username, periodM
   // Subtle paper grain keeps the receipt from looking like a plain white card.
   for (let index = 0; index < 2600; index += 1) { ctx.fillStyle = `rgba(70,65,56,${Math.random() * .025})`; ctx.fillRect(55 + Math.random() * 970, 38 + Math.random() * 1845, 1, 1); }
   const now = new Date();
-  receiptLabel(ctx, 'YTM-RECAP', 540, 132, { size: 56, weight: 700, align: 'center' });
+  receiptLabel(ctx, 'YOUTUBE-MUSIC-RECAP', 540, 132, { size: 46, weight: 700, align: 'center' });
   receiptLabel(ctx, periodText(periodMonths).toUpperCase(), 540, 184, { size: 26, align: 'center' });
   receiptLabel(ctx, `RECAP #${String(Math.floor(Math.random() * 10000)).padStart(4, '0')} FOR ${username.toUpperCase()}`, 82, 247, { size: 22, maxWidth: 900 });
   receiptLabel(ctx, jakartaDate(now), 82, 280, { size: 22 });
@@ -215,7 +237,7 @@ function drawReceiptRecap({ tracks, artists, since, matched }, username, periodM
   receiptLabel(ctx, `CARDHOLDER: ${username.toUpperCase()}`, 82, summaryY + 156, { size: 20, maxWidth: 900 });
   receiptLabel(ctx, t('thankYou'), 540, 1738, { size: 20, align: 'center' });
   receiptBarcode(ctx, 230, 1770, 620, 76);
-  receiptLabel(ctx, 'YTM-Recap', 540, 1874, { size: 18, align: 'center' });
+  receiptLabel(ctx, 'ytm-recap-kh1z.vercel.app', 540, 1874, { size: 18, align: 'center' });
   return canvas;
 }
 
