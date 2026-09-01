@@ -75,7 +75,7 @@ function glassBox(x, y, width, height, radius = 28) {
   return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="#ffffff" fill-opacity=".10" stroke="#ffffff" stroke-opacity=".22" stroke-width="2"/>`;
 }
 
-function recapSvg(topTracks, topArtists, since, now) {
+function recapSvg(topTracks, topArtists, since, now, username) {
   const date = (value) => value.toISOString().slice(0, 10);
   const artists = Array.from({ length: 3 }, (_, rank) => {
     const entry = topArtists[rank];
@@ -88,11 +88,15 @@ function recapSvg(topTracks, topArtists, since, now) {
     const y = 840 + index * 91;
     return `${glassBox(56, y, 968, 81, 22)}${text(80, y + 51, String(index + 1).padStart(2, '0'), 22, { fill: '#e6e5f0', opacity: .65 })}${text(156, y + 43, fit(track, 43), 28, { weight: 700 })}${text(156, y + 70, fit(artist, 56), 22, { fill: '#e6e5f0', opacity: .78 })}${text(995, y + 52, `${plays}×`, 28, { weight: 700, anchor: 'end' })}`;
   }).join('');
-  return `<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#121123"/><stop offset="1" stop-color="#282139"/></linearGradient><radialGradient id="glow" cx="79%" cy="14%" r="55%"><stop stop-color="#76365c" stop-opacity=".72"/><stop offset="1" stop-color="#301d42" stop-opacity="0"/></radialGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/><rect width="1080" height="1920" fill="url(#glow)"/><rect x="56" y="78" width="59" height="40" rx="12" fill="#ff0033"/><path d="M80 87v22l20-11z" fill="white"/>${text(135, 110, 'YOUTUBE MUSIC', 28, { fill: '#ff536f', weight: 700 })}${text(56, 215, 'YouTube Music', 53, { weight: 700 })}${text(56, 300, `Recap ${monthNames[now.getMonth()]}`, 62, { weight: 700 })}${text(58, 350, `${date(since)} — ${date(now)}  ·  30 hari terakhir`, 22, { fill: '#e6e5f0', opacity: .82 })}${artists}${text(56, 815, 'Top 10 lagu', 53, { weight: 700 })}${text(1024, 815, 'PUTAR', 22, { fill: '#e6e5f0', opacity: .8, anchor: 'end' })}${tracks}</svg>`;
+  return `<svg width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#121123"/><stop offset="1" stop-color="#282139"/></linearGradient><radialGradient id="glow" cx="79%" cy="14%" r="55%"><stop stop-color="#76365c" stop-opacity=".72"/><stop offset="1" stop-color="#301d42" stop-opacity="0"/></radialGradient></defs><rect width="1080" height="1920" fill="url(#bg)"/><rect width="1080" height="1920" fill="url(#glow)"/><rect x="56" y="78" width="59" height="40" rx="12" fill="#ff0033"/><path d="M80 87v22l20-11z" fill="white"/>${text(135, 110, 'YOUTUBE MUSIC', 28, { fill: '#ff536f', weight: 700 })}${text(1024, 112, fit(username, 26), 40, { fill: '#ffffff', weight: 700, anchor: 'end' })}${text(56, 215, 'YouTube Music', 53, { weight: 700 })}${text(56, 300, `Recap ${monthNames[now.getMonth()]}`, 62, { weight: 700 })}${text(58, 350, `${date(since)} — ${date(now)}  ·  30 hari terakhir`, 22, { fill: '#e6e5f0', opacity: .82 })}${artists}${text(56, 815, 'Top 10 lagu', 53, { weight: 700 })}${text(1024, 815, 'PUTAR', 22, { fill: '#e6e5f0', opacity: .8, anchor: 'end' })}${tracks}</svg>`;
 }
 
 async function main() {
   const includeYoutube = process.argv.includes('--include-youtube');
+  const nameIndex = process.argv.indexOf('--name');
+  const username = nameIndex >= 0 && process.argv[nameIndex + 1] && !process.argv[nameIndex + 1].startsWith('--')
+    ? process.argv[nameIndex + 1].trim()
+    : 'Pendengar YouTube Music';
   let files;
   try { files = await jsonFiles(inputDir); } catch { console.error(`Tidak menemukan folder input: ${inputDir}`); process.exitCode = 1; return; }
   if (!files.length) { console.error(`Tidak menemukan file JSON di: ${inputDir}`); process.exitCode = 1; return; }
@@ -104,7 +108,7 @@ async function main() {
   // The recap heading follows Jakarta time, consistent with the original report.
   const nowJakarta = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
   await mkdir(path.dirname(outputFile), { recursive: true });
-  await sharp(Buffer.from(recapSvg(tracks, artists, since, nowJakarta))).jpeg({ quality: 94, mozjpeg: true }).toFile(outputFile);
+  await sharp(Buffer.from(recapSvg(tracks, artists, since, nowJakarta, username))).jpeg({ quality: 94, mozjpeg: true }).toFile(outputFile);
   console.log(`Selesai: ${events.length} event pemutaran 30 hari terakhir dianalisis.`);
   console.log(`Gambar JPG dibuat: ${outputFile}`);
 }

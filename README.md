@@ -20,6 +20,12 @@ npm run recap
 
 Hasil dibuat di `output/youtube_music_recap.jpg`.
 
+Tambahkan nama atau username pada gambar dengan opsi `--name`:
+
+```powershell
+npm run recap -- --name "kh1zz"
+```
+
 Secara bawaan, hanya event yang jelas berasal dari YouTube Music yang dihitung. Jika histori Anda hanya memakai URL `youtube.com`, gunakan:
 
 ```powershell
