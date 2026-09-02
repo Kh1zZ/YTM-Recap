@@ -1,13 +1,18 @@
-name: Build Android APK
+name: Build & Release Android APK
 
 on:
   push:
     branches:
-      - main # sesuaikan dengan branch kamu
+      - main # Jalankan build artifact biasa saat push ke branch main
+    tags:
+      - 'v*' # Otomatis buat Release saat push tag seperti v1.0.0, v1.0.1, dll.
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # Izin wajib agar GitHub Actions bisa membuat Release
 
     steps:
       - name: Checkout Code
@@ -23,7 +28,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: 'npm'
 
       - name: Prepare WWW Directory
         run: |
@@ -35,13 +39,13 @@ jobs:
           if [ ! -f package.json ]; then npm init -y; fi
           npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      - name: Initialize & Sync Capacitor
+      - name: Sync Capacitor
         run: |
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
             npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir www
           fi
-          rm -rf android
-          npx cap add android
+          # Note: 'rm -rf android' dan 'npx cap add android' sengaja dihapus
+          # agar ikon dan konfigurasi dari folder 'android' lokalmu tidak terhapus.
           npx cap sync android
 
       - name: Build APK with Gradle
@@ -50,8 +54,23 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
+      - name: Rename APK File
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk YTM-Recap.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: YTM-Recap-APK
+          path: YTM-Recap.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: YTM-Recap.apk
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
