@@ -263,34 +263,52 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
-// Fungsi helper untuk menangani download di HP (Android WebView/Capacitor) maupun Laptop
-async function handleDownloadImage(blob) {
-  const fileName = 'YTM-Recap.jpg';
-  const file = new File([blob], fileName, { type: 'image/jpeg' });
+// Fungsi helper download yang kompatibel dengan Android WebView/Capacitor & Browser
+async function handleDownloadImage(canvas) {
+  // Konversi canvas langsung ke Base64 / Data URL
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
 
-  // 1. Cek apakah perangkat mendukung Web Share API (Di HP Android ini akan membuka menu bawaan HP)
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
+  try {
+    // Konversi Data URL ke File object untuk Web Share API
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], 'YTM-Recap.jpg', { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
         title: 'YTM Recap',
         text: 'Ini hasil YTM Recap saya!',
       });
       return;
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Gagal membagikan/menyimpan file:', error);
-      }
     }
+  } catch (error) {
+    if (error.name === 'AbortError') return; // User membatalkan dialog share
+    console.log('Share API tidak didukung/gagal, menggunakan fallback...', error);
   }
 
-  // 2. Fallback untuk browser laptop/desktop biasa
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // FALLBACK UNTUK ANDROID WEBVIEW MAUPUN BROWSER:
+  // Buka gambar di jendela/tab baru
+  const imageWindow = window.open();
+  if (imageWindow) {
+    imageWindow.document.write(`
+      <html>
+        <head><title>YTM Recap Result</title></head>
+        <body style="margin:0; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; color:#fff; font-family:sans-serif;">
+          <img src="${dataUrl}" style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5);" alt="YTM Recap"/>
+          <p style="margin-top:16px; font-size:14px; color:#aaa; text-align:center;">Tekan lama pada gambar di atas lalu pilih <b>Simpan Gambar / Save Image</b></p>
+        </body>
+      </html>
+    `);
+  } else {
+    // Fallback standar browser laptop
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'YTM-Recap.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 }
 
 // Event listener submit form utama
@@ -312,17 +330,14 @@ form.addEventListener('submit', async (event) => {
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
-    if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
+    // Tampilkan preview menggunakan Base64 Data URL
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
+    preview.src = dataUrl;
 
-    if (currentUrl) URL.revokeObjectURL(currentUrl);
-    currentUrl = URL.createObjectURL(blob);
-    preview.src = currentUrl;
-
-    // Intersepsi tombol download agar mengeksekusi handleDownloadImage
+    // Pasang handler tombol download langsung menggunakan objek canvas
     downloadLink.onclick = (e) => {
       e.preventDefault();
-      handleDownloadImage(blob);
+      handleDownloadImage(canvas);
     };
 
     document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`;
