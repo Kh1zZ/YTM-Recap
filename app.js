@@ -263,42 +263,21 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
-// Helper download menggunakan Capacitor Filesystem & Web Share API
+// Helper download yang kompatibel untuk WebView Android APK & Web Browser
 async function handleDownloadImage(canvas) {
   const fileName = `YTM-Recap-${Date.now()}.jpg`;
+
+  // 1. Ubah canvas ke format Base64 Data URL
   const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
 
-  // 1. OPSI UTAMA: Gunakan Capacitor Filesystem jika berjalan di dalam APK Android
-  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-    try {
-      const { Filesystem, Directory } = window.Capacitor.Plugins;
-
-      // Ambil string base64 murni tanpa prefix header
-      const base64Data = dataUrl.split(',')[1];
-
-      // Simpan file gambar langsung ke folder Documents/Pictures di HP
-      await Filesystem.writeFile({
-        path: fileName,
-        data: base64Data,
-        directory: Directory.Documents
-      });
-
-      alert('Gambar berhasil disimpan ke folder Documents HP kamu!');
-      return;
-    } catch (error) {
-      console.error('Gagal menyimpan file via Capacitor:', error);
-      alert('Gagal menyimpan file: ' + (error.message || error));
-      return;
-    }
-  }
-
-  // 2. OPSI KEDUA: Web Share API (Mobile Web Browser)
   try {
+    // 2. Ubah Data URL ke Blob & File Object untuk Share API
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const file = new File([blob], fileName, { type: 'image/jpeg' });
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    // 3. Gunakan Web Share API (Di Android WebView, ini memunculkan dialog 'Simpan Gambar')
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
         title: 'YTM Recap',
@@ -307,19 +286,106 @@ async function handleDownloadImage(canvas) {
       return;
     }
   } catch (error) {
-    if (error.name === 'AbortError') return;
+    if (error.name === 'AbortError') return; // User menutup jendela share
+    console.log('Share API tidak merespons, mencoba fallback...', error);
   }
 
-  // 3. FALLBACK: Browser Laptop/Desktop biasa
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // 4. Fallback standar untuk browser laptop/desktop
+  try {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    alert('Gagal mengunduh gambar. Silakan gunakan fitur screenshot HP.');
+  }
 }
 
-// Event listener submit form utama
+// -------------------------------------------------------------------------
+// EVENT LISTENERS INTERFASE / UI
+// -------------------------------------------------------------------------
+
+function updateSubmitState() {
+  button.disabled = !fileInput.files.length;
+}
+
+fileInput.addEventListener('change', () => {
+  fileLabel.textContent = fileInput.files[0]?.name || t('uploadFile');
+  updateSubmitState();
+});
+
+for (const eventName of ['dragenter', 'dragover']) {
+  document.querySelector('#upload-zone').addEventListener(eventName, (event) => {
+    event.preventDefault();
+    event.currentTarget.classList.add('dragging');
+  });
+}
+
+for (const eventName of ['dragleave', 'drop']) {
+  document.querySelector('#upload-zone').addEventListener(eventName, (event) => {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dragging');
+  });
+}
+
+document.querySelector('#upload-zone').addEventListener('drop', (event) => {
+  const [file] = event.dataTransfer.files;
+  if (file) {
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    fileInput.files = transfer.files;
+    fileLabel.textContent = file.name;
+    updateSubmitState();
+  }
+});
+
+document.querySelectorAll('input[name="style"]').forEach((input) => {
+  input.addEventListener('change', () => {
+    document.querySelectorAll('.style-option').forEach((option) => {
+      option.classList.toggle('selected', option.querySelector('input').checked);
+    });
+    document.querySelector('#glass-controls').classList.toggle('hidden', !document.querySelector('input[name="style"]:checked').value.includes('glass'));
+  });
+});
+
+document.querySelector('#background-type').addEventListener('change', (event) => {
+  document.querySelector('#custom-background-controls').classList.toggle('hidden', event.target.value !== 'custom');
+});
+
+document.querySelector('#background-file').addEventListener('change', (event) => {
+  const [file] = event.target.files;
+  if (!file) {
+    backgroundImage = undefined;
+    updateBackgroundPreview();
+    return;
+  }
+  const image = new Image();
+  image.onload = () => {
+    backgroundImage = image;
+    updateBackgroundPreview();
+  };
+  image.src = URL.createObjectURL(file);
+});
+
+['#accent-color', '#background-blur', '#background-darkness', '#background-size', '#background-x', '#background-y'].forEach((selector) => {
+  document.querySelector(selector).addEventListener('input', updateBackgroundPreview);
+  document.querySelector(selector).addEventListener('change', updateBackgroundPreview);
+});
+
+document.querySelector('#language-toggle').addEventListener('click', () => {
+  language = language === 'id' ? 'en' : 'id';
+  applyLanguage();
+});
+
+applyLanguage();
+updateBackgroundPreview();
+
+// -------------------------------------------------------------------------
+// FORM SUBMIT EVENT LISTENER UTAMA
+// -------------------------------------------------------------------------
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   status.textContent = '';
@@ -338,11 +404,11 @@ form.addEventListener('submit', async (event) => {
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
 
-    // Tampilkan preview
+    // Tampilkan preview menggunakan Data URL
     const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
     preview.src = dataUrl;
 
-    // Pasang handler tombol download
+    // Hubungkan tombol download langsung menggunakan objek canvas
     downloadLink.onclick = (e) => {
       e.preventDefault();
       handleDownloadImage(canvas);
