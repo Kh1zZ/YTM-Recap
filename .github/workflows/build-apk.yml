@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main # atau master (sesuaikan nama branch kamu)
+      - main
 
 jobs:
   build:
@@ -18,15 +18,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: Initialize package.json if missing & Install Capacitor
+      - name: Prepare WWW Directory
+        run: |
+          mkdir -p www
+          # Salin semua file web ke folder www (mengabaikan folder android & node_modules)
+          rsync -av --exclude='android' --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='www' ./ www/
+
+      - name: Initialize package.json & Install Capacitor
         run: |
           if [ ! -f package.json ]; then npm init -y; fi
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Initialize Capacitor Config if missing
+      - name: Initialize Capacitor Config
         run: |
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
-            npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir .
+            npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir www
           fi
 
       - name: Add & Sync Android Platform
