@@ -263,18 +263,75 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
+// Fungsi helper untuk menangani download di HP (Android WebView/Capacitor) maupun Laptop
+async function handleDownloadImage(blob) {
+  const fileName = 'YTM-Recap.jpg';
+  const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+  // 1. Cek apakah perangkat mendukung Web Share API (Di HP Android ini akan membuka menu bawaan HP)
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: 'YTM Recap',
+        text: 'Ini hasil YTM Recap saya!',
+      });
+      return;
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Gagal membagikan/menyimpan file:', error);
+      }
+    }
+  }
+
+  // 2. Fallback untuk browser laptop/desktop biasa
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Event listener submit form utama
 form.addEventListener('submit', async (event) => {
-  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.querySelector('[data-i18n="generate"]').textContent = t('generating');
+  event.preventDefault();
+  status.textContent = '';
+  result.classList.add('hidden');
+  button.disabled = true;
+  button.querySelector('[data-i18n="generate"]').textContent = t('generating');
+
   try {
     const periodMonths = Number(document.querySelector('#period').value);
-    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
+    const history = await historyFromFile(fileInput.files[0]);
+    const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
+
     if (!stats.matched) throw new Error(t('noHistory'));
+
     const username = document.querySelector('#username').value.trim() || t('defaultName');
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
+
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
     if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
-    if (currentUrl) URL.revokeObjectURL(currentUrl); currentUrl = URL.createObjectURL(blob); preview.src = currentUrl; downloadLink.href = currentUrl; document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`; result.classList.remove('hidden'); result.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch (error) { status.textContent = error.message || 'Terjadi kesalahan saat memproses file.'; }
-  finally { updateSubmitState(); button.querySelector('[data-i18n="generate"]').textContent = t('generate'); }
+
+    if (currentUrl) URL.revokeObjectURL(currentUrl);
+    currentUrl = URL.createObjectURL(blob);
+    preview.src = currentUrl;
+
+    // Intersepsi tombol download agar mengeksekusi handleDownloadImage
+    downloadLink.onclick = (e) => {
+      e.preventDefault();
+      handleDownloadImage(blob);
+    };
+
+    document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`;
+    result.classList.remove('hidden');
+    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (error) {
+    status.textContent = error.message || 'Terjadi kesalahan saat memproses file.';
+  } finally {
+    updateSubmitState();
+    button.querySelector('[data-i18n="generate"]').textContent = t('generate');
+  }
 });
