@@ -263,30 +263,56 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
-// Fungsi helper untuk menangani download di HP (Android WebView/Capacitor) maupun Laptop
-async function handleDownloadImage(blob) {
-  const fileName = 'YTM-Recap.jpg';
-  const file = new File([blob], fileName, { type: 'image/jpeg' });
+// Helper download menggunakan Capacitor Filesystem & Web Share API
+async function handleDownloadImage(canvas) {
+  const fileName = `YTM-Recap-${Date.now()}.jpg`;
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
 
-  // 1. Cek apakah perangkat mendukung Web Share API (Di HP Android ini akan membuka menu bawaan HP)
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  // 1. OPSI UTAMA: Gunakan Capacitor Filesystem jika berjalan di dalam APK Android
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
     try {
+      const { Filesystem, Directory } = window.Capacitor.Plugins;
+
+      // Ambil string base64 murni tanpa prefix header
+      const base64Data = dataUrl.split(',')[1];
+
+      // Simpan file gambar langsung ke folder Documents/Pictures di HP
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
+      });
+
+      alert('Gambar berhasil disimpan ke folder Documents HP kamu!');
+      return;
+    } catch (error) {
+      console.error('Gagal menyimpan file via Capacitor:', error);
+      alert('Gagal menyimpan file: ' + (error.message || error));
+      return;
+    }
+  }
+
+  // 2. OPSI KEDUA: Web Share API (Mobile Web Browser)
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
         title: 'YTM Recap',
         text: 'Ini hasil YTM Recap saya!',
       });
       return;
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Gagal membagikan/menyimpan file:', error);
-      }
     }
+  } catch (error) {
+    if (error.name === 'AbortError') return;
   }
 
-  // 2. Fallback untuk browser laptop/desktop biasa
+  // 3. FALLBACK: Browser Laptop/Desktop biasa
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = dataUrl;
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
@@ -295,26 +321,31 @@ async function handleDownloadImage(blob) {
 
 // Event listener submit form utama
 form.addEventListener('submit', async (event) => {
-  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.querySelector('[data-i18n="generate"]').textContent = t('generating');
+  event.preventDefault();
+  status.textContent = '';
+  result.classList.add('hidden');
+  button.disabled = true;
+  button.querySelector('[data-i18n="generate"]').textContent = t('generating');
+
   try {
     const periodMonths = Number(document.querySelector('#period').value);
-    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
+    const history = await historyFromFile(fileInput.files[0]);
+    const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
+
     if (!stats.matched) throw new Error(t('noHistory'));
+
     const username = document.querySelector('#username').value.trim() || t('defaultName');
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
-    if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
+    // Tampilkan preview
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
+    preview.src = dataUrl;
 
-    if (currentUrl) URL.revokeObjectURL(currentUrl);
-    currentUrl = URL.createObjectURL(blob);
-    preview.src = currentUrl;
-
-    // Intersepsi tombol download agar mengeksekusi handleDownloadImage
+    // Pasang handler tombol download
     downloadLink.onclick = (e) => {
       e.preventDefault();
-      handleDownloadImage(blob);
+      handleDownloadImage(canvas);
     };
 
     document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`;
