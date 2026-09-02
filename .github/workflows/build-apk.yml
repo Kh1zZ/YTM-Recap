@@ -3,16 +3,16 @@ name: Build & Release Android APK
 on:
   push:
     branches:
-      - main # Jalankan build artifact biasa saat push ke branch main
+      - main
     tags:
-      - 'v*' # Otomatis buat Release saat push tag seperti v1.0.0, v1.0.1, dll.
+      - 'v*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # Izin wajib agar GitHub Actions bisa membuat Release
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -37,22 +37,25 @@ jobs:
       - name: Install Dependencies
         run: |
           if [ ! -f package.json ]; then npm init -y; fi
-          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/assets@latest
 
-      - name: Sync Capacitor
+      - name: Re-generate Android & Assets
         run: |
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
             npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir www
           fi
-          # Note: 'rm -rf android' dan 'npx cap add android' sengaja dihapus
-          # agar ikon dan konfigurasi dari folder 'android' lokalmu tidak terhapus.
+          # Hapus folder android lokal yang bentrok lalu buat ulang secara bersih
+          rm -rf android
+          npx cap add android
+          # Generate ikon aplikasi dari folder assets jika ada
+          if [ -d "assets" ]; then npx capacitor-assets generate --android || true; fi
           npx cap sync android
 
       - name: Build APK with Gradle
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace --info
+          ./gradlew assembleDebug --stacktrace
 
       - name: Rename APK File
         run: |
