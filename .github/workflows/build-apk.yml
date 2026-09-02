@@ -18,11 +18,13 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+          cache: 'gradle' # Otomatis handle cache Gradle tanpa error key
 
-      - name: Set up Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: 'npm' # Otomatis handle cache NPM tanpa error key
 
       - name: Prepare WWW Directory
         run: |
@@ -54,6 +56,3 @@ jobs:
         with:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Cache
-        uses: actions/cache@v6.1.0
