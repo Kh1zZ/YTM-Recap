@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main
+      - main # sesuaikan dengan branch kamu
 
 jobs:
   build:
@@ -13,6 +13,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v5
 
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
@@ -21,39 +27,33 @@ jobs:
       - name: Prepare WWW Directory
         run: |
           mkdir -p www
-          # Salin semua file web ke folder www (mengabaikan folder android & node_modules)
           rsync -av --exclude='android' --exclude='node_modules' --exclude='.git' --exclude='.github' --exclude='www' ./ www/
 
-      - name: Initialize package.json & Install Capacitor
+      - name: Install Dependencies
         run: |
           if [ ! -f package.json ]; then npm init -y; fi
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
 
-      - name: Initialize Capacitor Config
+      - name: Initialize & Sync Capacitor
         run: |
           if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
             npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir www
           fi
-
-      - name: Add & Sync Android Platform
-        run: |
-          npx cap add android || true
+          rm -rf android
+          npx cap add android
           npx cap sync android
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
 
       - name: Build APK with Gradle
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Cache
+        uses: actions/cache@v6.1.0
