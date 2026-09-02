@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     branches:
-      - main # atau 'master', sesuaikan dengan nama branch utama repositori kamu
+      - main # atau master (sesuaikan nama branch kamu)
 
 jobs:
   build:
@@ -11,19 +11,25 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
-      - name: Install Dependencies
+      - name: Initialize package.json if missing & Install Capacitor
         run: |
-          npm install
+          if [ ! -f package.json ]; then npm init -y; fi
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Sync Capacitor
+      - name: Initialize Capacitor Config if missing
+        run: |
+          if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
+            npx cap init "YTM-Recap" "com.kh1zz.ytmrecap" --web-dir .
+          fi
+
+      - name: Add & Sync Android Platform
         run: |
           npx cap add android || true
           npx cap sync android
