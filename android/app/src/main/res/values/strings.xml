@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">YTM Recap</string>
+    <string name="title_activity_main">YTM Recap</string>
+    <string name="package_name">com.kh1zz.ytmrecap</string>
+    <string name="custom_url_scheme">com.kh1zz.ytmrecap</string>
+</resources>

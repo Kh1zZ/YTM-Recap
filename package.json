@@ -2,5 +2,11 @@
   "name": "youtube-music-takeout-stats",
   "version": "1.0.0",
   "private": true,
-  "description": "Create a YouTube Music recap image from Google Takeout history."
+  "description": "Create a YouTube Music recap image from Google Takeout history.",
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.1"
+  }
 }
