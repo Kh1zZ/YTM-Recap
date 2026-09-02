@@ -263,81 +263,58 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
-// Fungsi helper download yang kompatibel dengan Android WebView/Capacitor & Browser
-async function handleDownloadImage(canvas) {
-  // Konversi canvas langsung ke Base64 / Data URL
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
+// Fungsi helper untuk menangani download di HP (Android WebView/Capacitor) maupun Laptop
+async function handleDownloadImage(blob) {
+  const fileName = 'YTM-Recap.jpg';
+  const file = new File([blob], fileName, { type: 'image/jpeg' });
 
-  try {
-    // Konversi Data URL ke File object untuk Web Share API
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], 'YTM-Recap.jpg', { type: 'image/jpeg' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  // 1. Cek apakah perangkat mendukung Web Share API (Di HP Android ini akan membuka menu bawaan HP)
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
       await navigator.share({
         files: [file],
         title: 'YTM Recap',
         text: 'Ini hasil YTM Recap saya!',
       });
       return;
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Gagal membagikan/menyimpan file:', error);
+      }
     }
-  } catch (error) {
-    if (error.name === 'AbortError') return; // User membatalkan dialog share
-    console.log('Share API tidak didukung/gagal, menggunakan fallback...', error);
   }
 
-  // FALLBACK UNTUK ANDROID WEBVIEW MAUPUN BROWSER:
-  // Buka gambar di jendela/tab baru
-  const imageWindow = window.open();
-  if (imageWindow) {
-    imageWindow.document.write(`
-      <html>
-        <head><title>YTM Recap Result</title></head>
-        <body style="margin:0; background:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; color:#fff; font-family:sans-serif;">
-          <img src="${dataUrl}" style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5);" alt="YTM Recap"/>
-          <p style="margin-top:16px; font-size:14px; color:#aaa; text-align:center;">Tekan lama pada gambar di atas lalu pilih <b>Simpan Gambar / Save Image</b></p>
-        </body>
-      </html>
-    `);
-  } else {
-    // Fallback standar browser laptop
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'YTM-Recap.jpg';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+  // 2. Fallback untuk browser laptop/desktop biasa
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // Event listener submit form utama
 form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  status.textContent = '';
-  result.classList.add('hidden');
-  button.disabled = true;
-  button.querySelector('[data-i18n="generate"]').textContent = t('generating');
-
+  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.querySelector('[data-i18n="generate"]').textContent = t('generating');
   try {
     const periodMonths = Number(document.querySelector('#period').value);
-    const history = await historyFromFile(fileInput.files[0]);
-    const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
-
+    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
     if (!stats.matched) throw new Error(t('noHistory'));
-
     const username = document.querySelector('#username').value.trim() || t('defaultName');
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
 
-    // Tampilkan preview menggunakan Base64 Data URL
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
-    preview.src = dataUrl;
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
+    if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
 
-    // Pasang handler tombol download langsung menggunakan objek canvas
+    if (currentUrl) URL.revokeObjectURL(currentUrl);
+    currentUrl = URL.createObjectURL(blob);
+    preview.src = currentUrl;
+
+    // Intersepsi tombol download agar mengeksekusi handleDownloadImage
     downloadLink.onclick = (e) => {
       e.preventDefault();
-      handleDownloadImage(canvas);
+      handleDownloadImage(blob);
     };
 
     document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`;
