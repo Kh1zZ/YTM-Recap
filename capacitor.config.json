@@ -1,0 +1,6 @@
+{
+  "appId": "com.kh1zz.ytmrecap",
+  "appName": "YTM Recap",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
