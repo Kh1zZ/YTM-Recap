@@ -109,8 +109,6 @@ function label(ctx, value, x, y, options = {}) {
   ctx.fillText(maxWidth ? truncate(ctx, value, maxWidth) : value, x, y);
 }
 
-// Canvas positions text by its baseline. Measure each line so the complete
-// title/subtitle group stays optically centered inside its card.
 function centeredTextBlock(ctx, lines, x, centerY) {
   const measured = lines.map((line) => {
     ctx.font = `${line.weight || 400} ${line.size || 28}px Arial, sans-serif`;
@@ -173,7 +171,6 @@ function drawGlassRecap({ tracks, artists, since }, username, periodMonths) {
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
   const ctx = canvas.getContext('2d');
   const accent = drawBackground(ctx);
-  // Header follows the compact YouTube Music Recap lockup from the reference.
   ctx.fillStyle = '#ff0033'; ctx.beginPath(); ctx.arc(116, 132, 60, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(116, 132, 30, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(108, 115); ctx.lineTo(108, 149); ctx.lineTo(137, 132); ctx.fill();
@@ -213,7 +210,6 @@ function drawReceiptRecap({ tracks, artists, since, matched }, username, periodM
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#d4d0c5'; ctx.fillRect(0, 0, 1080, 1920);
   roundedRect(ctx, 48, 30, 984, 1860, 2, '#f7f4ea');
-  // Subtle paper grain keeps the receipt from looking like a plain white card.
   for (let index = 0; index < 2600; index += 1) { ctx.fillStyle = `rgba(70,65,56,${Math.random() * .025})`; ctx.fillRect(55 + Math.random() * 970, 38 + Math.random() * 1845, 1, 1); }
   const now = new Date();
   receiptLabel(ctx, 'YOUTUBE-MUSIC-RECAP', 540, 132, { size: 46, weight: 700, align: 'center' });
@@ -263,164 +259,18 @@ document.querySelector('#language-toggle').addEventListener('click', () => { lan
 applyLanguage();
 updateBackgroundPreview();
 
-// Helper download yang kompatibel untuk WebView Android APK & Web Browser
-async function handleDownloadImage(canvas) {
-  const fileName = `YTM-Recap-${Date.now()}.jpg`;
-
-  // 1. Ubah canvas ke format Base64 Data URL
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
-
-  try {
-    // 2. Ubah Data URL ke Blob & File Object untuk Share API
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], fileName, { type: 'image/jpeg' });
-
-    // 3. Gunakan Web Share API (Di Android WebView, ini memunculkan dialog 'Simpan Gambar')
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: 'YTM Recap',
-        text: 'Ini hasil YTM Recap saya!',
-      });
-      return;
-    }
-  } catch (error) {
-    if (error.name === 'AbortError') return; // User menutup jendela share
-    console.log('Share API tidak merespons, mencoba fallback...', error);
-  }
-
-  // 4. Fallback standar untuk browser laptop/desktop
-  try {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } catch (err) {
-    alert('Gagal mengunduh gambar. Silakan gunakan fitur screenshot HP.');
-  }
-}
-
-// -------------------------------------------------------------------------
-// EVENT LISTENERS INTERFASE / UI
-// -------------------------------------------------------------------------
-
-function updateSubmitState() {
-  button.disabled = !fileInput.files.length;
-}
-
-fileInput.addEventListener('change', () => {
-  fileLabel.textContent = fileInput.files[0]?.name || t('uploadFile');
-  updateSubmitState();
-});
-
-for (const eventName of ['dragenter', 'dragover']) {
-  document.querySelector('#upload-zone').addEventListener(eventName, (event) => {
-    event.preventDefault();
-    event.currentTarget.classList.add('dragging');
-  });
-}
-
-for (const eventName of ['dragleave', 'drop']) {
-  document.querySelector('#upload-zone').addEventListener(eventName, (event) => {
-    event.preventDefault();
-    event.currentTarget.classList.remove('dragging');
-  });
-}
-
-document.querySelector('#upload-zone').addEventListener('drop', (event) => {
-  const [file] = event.dataTransfer.files;
-  if (file) {
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-    fileInput.files = transfer.files;
-    fileLabel.textContent = file.name;
-    updateSubmitState();
-  }
-});
-
-document.querySelectorAll('input[name="style"]').forEach((input) => {
-  input.addEventListener('change', () => {
-    document.querySelectorAll('.style-option').forEach((option) => {
-      option.classList.toggle('selected', option.querySelector('input').checked);
-    });
-    document.querySelector('#glass-controls').classList.toggle('hidden', !document.querySelector('input[name="style"]:checked').value.includes('glass'));
-  });
-});
-
-document.querySelector('#background-type').addEventListener('change', (event) => {
-  document.querySelector('#custom-background-controls').classList.toggle('hidden', event.target.value !== 'custom');
-});
-
-document.querySelector('#background-file').addEventListener('change', (event) => {
-  const [file] = event.target.files;
-  if (!file) {
-    backgroundImage = undefined;
-    updateBackgroundPreview();
-    return;
-  }
-  const image = new Image();
-  image.onload = () => {
-    backgroundImage = image;
-    updateBackgroundPreview();
-  };
-  image.src = URL.createObjectURL(file);
-});
-
-['#accent-color', '#background-blur', '#background-darkness', '#background-size', '#background-x', '#background-y'].forEach((selector) => {
-  document.querySelector(selector).addEventListener('input', updateBackgroundPreview);
-  document.querySelector(selector).addEventListener('change', updateBackgroundPreview);
-});
-
-document.querySelector('#language-toggle').addEventListener('click', () => {
-  language = language === 'id' ? 'en' : 'id';
-  applyLanguage();
-});
-
-applyLanguage();
-updateBackgroundPreview();
-
-// -------------------------------------------------------------------------
-// FORM SUBMIT EVENT LISTENER UTAMA
-// -------------------------------------------------------------------------
-
 form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  status.textContent = '';
-  result.classList.add('hidden');
-  button.disabled = true;
-  button.querySelector('[data-i18n="generate"]').textContent = t('generating');
-
+  event.preventDefault(); status.textContent = ''; result.classList.add('hidden'); button.disabled = true; button.querySelector('[data-i18n="generate"]').textContent = t('generating');
   try {
     const periodMonths = Number(document.querySelector('#period').value);
-    const history = await historyFromFile(fileInput.files[0]);
-    const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
-
+    const history = await historyFromFile(fileInput.files[0]); const stats = buildStats(history, document.querySelector('#include-youtube').checked, periodMonths);
     if (!stats.matched) throw new Error(t('noHistory'));
-
     const username = document.querySelector('#username').value.trim() || t('defaultName');
     const selectedStyle = document.querySelector('input[name="style"]:checked').value;
     const canvas = selectedStyle === 'receipt' ? drawReceiptRecap(stats, username, periodMonths) : drawGlassRecap(stats, username, periodMonths);
-
-    // Tampilkan preview menggunakan Data URL
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
-    preview.src = dataUrl;
-
-    // Hubungkan tombol download langsung menggunakan objek canvas
-    downloadLink.onclick = (e) => {
-      e.preventDefault();
-      handleDownloadImage(canvas);
-    };
-
-    document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`;
-    result.classList.remove('hidden');
-    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch (error) {
-    status.textContent = error.message || 'Terjadi kesalahan saat memproses file.';
-  } finally {
-    updateSubmitState();
-    button.querySelector('[data-i18n="generate"]').textContent = t('generate');
-  }
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .94));
+    if (!blob) throw new Error('Gambar tidak dapat dibuat. Coba ulangi.');
+    if (currentUrl) URL.revokeObjectURL(currentUrl); currentUrl = URL.createObjectURL(blob); preview.src = currentUrl; downloadLink.href = currentUrl; document.querySelector('#result-summary').textContent = `${stats.matched.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')} ${t('analyzed')} ${periodText(periodMonths)}.`; result.classList.remove('hidden'); result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (error) { status.textContent = error.message || 'Terjadi kesalahan saat memproses file.'; }
+  finally { updateSubmitState(); button.querySelector('[data-i18n="generate"]').textContent = t('generate'); }
 });
